@@ -1,10 +1,21 @@
 import tornado.ioloop
 import tornado.web
+from collections import defaultdict
 import json
 import os
 import datetime
 import time
 from pymongo import MongoClient
+
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, datetime.datetime):
+        serial = obj.isoformat()
+        return serial
+    raise TypeError ("Type not serializable")
+
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
@@ -31,35 +42,53 @@ class MainHandler(tornado.web.RequestHandler):
                 'nah': 'moskau',
             },
         ]
-        
+
         raw_data = []
         client = MongoClient()
         db = client.routes
         routes = db['routes']
-        cursor = routes.find({'direction': 'msk'})
+        cursor = routes.find({}, {'_id': 0})
+        data = defaultdict(list)
+        labels = []
         for item in cursor:
+
+            print(item)
+            for key, value in item.items():
+                print('___{} {}'.format(key,value))
+                if key == "timestamp":
+                    formatted = str(value.strftime('%H:%M'))
+                    labels.append(formatted)
+                else:
+                    data[key].append(value)
             raw_data.append(item)
-        data = dict(
-            labels=[str(item['timestamp'].strftime('%H:%M')) for item in raw_data],
-            bor=[item['bor'] for item in raw_data],
-            you=[item['you'] for item in raw_data],
-            per=[item['per'] for item in raw_data],
+        print(data)
 
-        )
-        
+        print('-------')
+        datasets = []
+        for key, value in filter((lambda k: k != 'labels'), data.items()):
+            datasets.append(
+                dict(
+                    name=key,
+                    values=value,
+                )
+            )
+        # data = dict(
+        #     labels=[str(item['timestamp'].strftime('%H:%M')) for item in raw_data],
+        #     bor=[item['bor'] for item in raw_data],
+        #     you=[item['you'] for item in raw_data],
+        #     per=[item['per'] for item in raw_data],
+        #
+        # )
+
         raw_home_data = []
-        cursor_home = routes.find({'direction': 'home'})
-        for item in cursor_home:
-            raw_home_data.append(item)
-        home_data = dict(
-            labels=[str(item['timestamp'].strftime('%H:%M')) for item in raw_home_data],
-            vol=[item['vol'] for item in raw_home_data],
-        )
 
-        res = json.dumps(dict(
-            work=data,
-            home=home_data,
-        ))
+        res = json.dumps(
+            dict(
+                labels=labels,
+                data=datasets
+            )
+        )
+        print(res)
         self.write(res)
 
 if __name__ == "__main__":
@@ -70,4 +99,3 @@ if __name__ == "__main__":
     ])
     application.listen(8085)
     tornado.ioloop.IOLoop.current().start()
-

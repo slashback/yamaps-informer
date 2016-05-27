@@ -16,9 +16,9 @@
     var ctx_home = document.getElementById("myChartHome");
 
     $.getJSON('/api/', function (dataset) {
-      console.log(dataset)    
-     
-      var labels = dataset.work.labels
+      console.log(dataset)
+
+      var labels = dataset.labels
       var bor = dataset.work.bor
       var you = dataset.work.you
       var per = dataset.work.per
