@@ -9,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class YandexHelper:
-    SOURCE_HTML = 'file:///home/mmazaev/Desktop/yamaps-informer/index_parser.html'
+    SOURCE_HTML = 'http://localhost:8085/index_parser.html'
     def __init__(self):
         self.display = Display(visible=0, size=(800, 600))
         self.display.start()

@@ -61,5 +61,4 @@ function init() {
       document.body.innerHTML += '<div id="results"></div>';
       results.map((result) => document.getElementById('results').innerHTML += `<div class="results" id="${result.name}">` + result.result + '</div>')
   });
-
 }
