@@ -1,4 +1,4 @@
-from os import path
+from os import path, environ
 import json
 import datetime
 from pymongo import MongoClient
@@ -8,18 +8,20 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+MONGODB_URI = environ.get('DB_PORT_27017_TCP_ADDR', 'localhost')
+print(MONGODB_URI)
 
 class YandexHelper:
     SOURCE_HTML = 'file://{}'.format(
-        path.join(path.dirname(path.abspath(__file__)), 'index_parser.html'
+        path.join(path.dirname(path.abspath(__file__)), 'index_parser.html')
     )
-    
+
     def __init__(self):
         self.display = Display(visible=0, size=(800, 600))
         self.display.start()
         self.browser = webdriver.Firefox()
         self.browser.get(self.SOURCE_HTML)
-        print(self.browser.page_source)
+        # print(self.browser.page_source)
 
     def __enter__(self):
         return self
@@ -36,7 +38,7 @@ class YandexHelper:
         return routes
 
     def _save(self, item):
-        client = MongoClient()
+        client = MongoClient(MONGODB_URI)
         db = client.routes
         routes = db['routes']
         routes.insert(item)
