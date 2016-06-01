@@ -1,0 +1,18 @@
+# backend:
+#   build: .
+#   dockerfile: backend.Dockerfile
+#   ports:
+#     - "8085:8085"
+#   command: python3 /app/server.py
+#   links:
+#     - db
+
+parser:
+  build: .
+  dockerfile: parser.Dockerfile
+  command: cron && tail -f /var/log/cron.log
+  links:
+    - db
+
+db:
+  image: mongo:3.0.2
