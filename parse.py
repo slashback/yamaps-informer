@@ -1,3 +1,4 @@
+from os import path
 import json
 import datetime
 from pymongo import MongoClient
@@ -9,12 +10,16 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class YandexHelper:
-    SOURCE_HTML = 'http://localhost:8085/index_parser.html'
+    SOURCE_HTML = 'file://{}'.format(
+        path.join(path.dirname(path.abspath(__file__)), 'index_parser.html'
+    )
+    
     def __init__(self):
         self.display = Display(visible=0, size=(800, 600))
         self.display.start()
         self.browser = webdriver.Firefox()
         self.browser.get(self.SOURCE_HTML)
+        print(self.browser.page_source)
 
     def __enter__(self):
         return self
@@ -39,9 +44,12 @@ class YandexHelper:
 
     def get_routes(self):
         try:
-            vol = WebDriverWait(self.browser, 10).until(EC.presence_of_element_located((By.ID, "results")))
+            vol = WebDriverWait(self.browser, 20).until(EC.presence_of_element_located((By.ID, "results")))
         finally:
             parsed_durations = self._parse_html()
+            if not parsed_durations:
+                print('No data')
+                return False
             routes = self._format_data(parsed_durations)
             result = self._save(routes)
             return result

@@ -47,7 +47,8 @@ class MainHandler(tornado.web.RequestHandler):
         client = MongoClient()
         db = client.routes
         routes = db['routes']
-        cursor = routes.find({}, {'_id': 0})
+        from_midnight = datetime.datetime.combine(datetime.datetime.now().date(), datetime.time(0))
+        cursor = routes.find({'timestamp': {'$gt': from_midnight}}, {'_id': 0})
         data = defaultdict(list)
         labels = []
         for item in cursor:
