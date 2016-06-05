@@ -1,11 +1,11 @@
-# backend:
-#   build: .
-#   dockerfile: backend.Dockerfile
-#   ports:
-#     - "8085:8085"
-#   command: python3 /app/server.py
-#   links:
-#     - db
+backend:
+  build: .
+  dockerfile: backend.Dockerfile
+  ports:
+    - "8085:8085"
+  command: python3 /app/server.py
+  links:
+    - db
 
 parser:
   build: .
