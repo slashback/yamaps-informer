@@ -10,9 +10,15 @@
 parser:
   build: .
   dockerfile: parser.Dockerfile
-  command: cron && tail -f /var/log/cron.log
+  command: python3 -m celery worker -A parse -B -s /tmp/celerybeat-schedule
+  environment:
+    - C_FORCE_ROOT=true
   links:
     - db
+    - amqp
 
 db:
   image: mongo:3.0.2
+
+amqp:
+  image: rabbitmq:latest

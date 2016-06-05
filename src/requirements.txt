@@ -2,3 +2,4 @@ pymongo
 tornado
 pyvirtualdisplay
 selenium
+celery
