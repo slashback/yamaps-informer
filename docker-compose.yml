@@ -1,0 +1,24 @@
+backend:
+  build: .
+  dockerfile: backend.Dockerfile
+  ports:
+    - "8085:8085"
+  command: python3 /app/server.py
+  links:
+    - db
+
+parser:
+  build: .
+  dockerfile: parser.Dockerfile
+  command: python3 -m celery worker -A parse -B -s /tmp/celerybeat-schedule
+  environment:
+    - C_FORCE_ROOT=true
+  links:
+    - db
+    - amqp
+
+db:
+  image: mongo:3.0.2
+
+amqp:
+  image: rabbitmq:latest

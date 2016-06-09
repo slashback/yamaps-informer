@@ -7,6 +7,7 @@ import datetime
 import time
 from pymongo import MongoClient
 
+MONGODB_URI = os.environ.get('DB_PORT_27017_TCP_ADDR', 'localhost')
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -18,8 +19,9 @@ def json_serial(obj):
 
 
 class MainHandler(tornado.web.RequestHandler):
-    def get(self, foo):
-        client = MongoClient()
+    def get(self):
+        raw_data = []
+        client = MongoClient(MONGODB_URI)
         db = client.routes
         routes = db['routes']
         from_midnight = datetime.datetime.combine(datetime.datetime.now().date(), datetime.time(0))
@@ -54,7 +56,7 @@ class MainHandler(tornado.web.RequestHandler):
 
 if __name__ == "__main__":
     application = tornado.web.Application([
-        (r"/(.*)", MainHandler),
+        (r"/", MainHandler),
     ])
     application.listen(8085)
     tornado.ioloop.IOLoop.current().start()
