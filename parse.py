@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 class YandexHelper:
     SOURCE_HTML = 'file://{}'.format(
-        path.join(path.dirname(path.abspath(__file__)), 'index_parser.html'
+        path.join(path.dirname(path.abspath(__file__)), 'index_parser.html')
     )
     
     def __init__(self):
