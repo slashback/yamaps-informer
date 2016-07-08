@@ -18,6 +18,10 @@ def json_serial(obj):
     raise TypeError ("Type not serializable")
 
 
+class StaticHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render("index_parser.html", data={})
+
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         raw_data = []
@@ -57,6 +61,7 @@ class MainHandler(tornado.web.RequestHandler):
 if __name__ == "__main__":
     application = tornado.web.Application([
         (r"/", MainHandler),
+        (r'/(.*)', tornado.web.StaticFileHandler, {'path': '/opt/projects/yamaps-informer/src'}),
     ])
     application.listen(8085)
     tornado.ioloop.IOLoop.current().start()

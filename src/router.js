@@ -1,5 +1,4 @@
 ymaps.ready(init);
-
 function init() {
   var myMap = new ymaps.Map("map", {
     center: [55.902109,37.696444],
@@ -39,7 +38,7 @@ function init() {
       ]
     },
   ]
-
+  
   function reflect(promiseObject){
     var promise = promiseObject.promise
     var routeName = promiseObject.name
@@ -60,5 +59,6 @@ function init() {
       console.log(results)
       document.body.innerHTML += '<div id="results"></div>';
       results.map((result) => document.getElementById('results').innerHTML += `<div class="results" id="${result.name}">` + result.result + '</div>')
+      
   });
 }

@@ -42,6 +42,7 @@ class YandexHelper:
     def __init__(self):
         self.display = Display(visible=0, size=(800, 600))
         self.display.start()
+        print(self.display)
         self.browser = webdriver.Firefox()
         self.browser.get(self.SOURCE_HTML)
         # print(self.browser.page_source)
