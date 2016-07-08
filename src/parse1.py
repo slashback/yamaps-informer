@@ -38,15 +38,17 @@ class YandexHelper:
     def _parse_html(self):
         from subprocess import check_output, STDOUT, CalledProcessError
         from json import loads
-        print(path.join(path.dirname(path.abspath(__file__)), 'node_modules/phantomjs/bin/phantomjs'))
+        formatted = dict()
+        print('Trying to parse...')
         for i in range(5):
             try:
-                result = check_output([path.join(path.dirname(path.abspath(__file__)), 'node_modules/phantomjs/bin/phantomjs'), "test1.js"], stderr=STDOUT)
+                result = check_output(['phantomjs', "test1.js"], stderr=STDOUT)
+                formatted = loads(result.decode()[:-1])
                 break
-            except CalledProcessError:
+            except CalledProcessError as ex:
                 print('Exception {}'.format(i))
-            
-        formatted = loads(result.decode()[:-1])
+                print(ex)
+   
         print(formatted)
         format_time = lambda x: int(float(x) // 60)
         parsed = { k: format_time(w) for k,w in formatted.items() }
