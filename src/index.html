@@ -13,31 +13,33 @@
     var dataset = JSON.parse(`{% raw data %}`)
     var ctx = document.getElementById("myChart");
     var labels = dataset.labels
-    var datasets = dataset.data.map(item => ({
-      label: item.name,
-      fill: false,
-      lineTension: 0.1,
-      backgroundColor: "rgba(75,192,192,0.4)",
-      borderColor: "rgba(75,192,192,1)",
-      borderCapStyle: 'butt',
-      borderDash: [],
-      borderDashOffset: 0.0,
-      borderJoinStyle: 'miter',
-      pointBorderColor: "rgba(75,192,192,1)",
-      pointBackgroundColor: "#fff",
-      pointBorderWidth: 1,
-      pointHoverRadius: 5,
-      pointHoverBackgroundColor: "rgba(75,192,192,1)",
-      pointHoverBorderColor: "rgba(220,220,220,1)",
-      pointHoverBorderWidth: 2,
-      pointRadius: 1,
-      pointHitRadius: 10,
-      data: item.values,
-    }))
+    var datasets = dataset.data.map(function(item) {
+      return {
+        label: item.name,
+        fill: false,
+        lineTension: 0.1,
+        backgroundColor: "rgba(75,192,192,0.4)",
+        borderColor: "rgba(75,192,192,1)",
+        borderCapStyle: 'butt',
+        borderDash: [],
+        borderDashOffset: 0.0,
+        borderJoinStyle: 'miter',
+        pointBorderColor: "rgba(75,192,192,1)",
+        pointBackgroundColor: "#fff",
+        pointBorderWidth: 1,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: "rgba(75,192,192,1)",
+        pointHoverBorderColor: "rgba(220,220,220,1)",
+        pointHoverBorderWidth: 2,
+        pointRadius: 1,
+        pointHitRadius: 10,
+        data: item.values,
+      }
+    })
 
     var data = {
-      labels,
-      datasets
+      labels: labels,
+      datasets: datasets
     };
 
     var options = {
@@ -54,8 +56,8 @@
 
     var myChartHome = new Chart(ctx, {
       type: 'line',
-      data,
-      options,
+      data: data,
+      options: options,
     });
     </script>
   </body>
