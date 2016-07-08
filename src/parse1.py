@@ -3,15 +3,8 @@ from celery import Celery
 import json
 import datetime
 from pymongo import MongoClient
-from pyvirtualdisplay import Display
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
-
-
 from celery.schedules import crontab
+
 
 celery_config = dict(
     BROKER_URL = 'amqp://{user}:{password}@{hostname}/{vhost}/'.format(
@@ -22,13 +15,13 @@ celery_config = dict(
     CELERY_RESULT_BACKEND = "amqp",
     CELERYBEAT_SCHEDULE = {
         'every-hour': {
-            'task': 'parse.parse_routes',
+            'task': 'parse1.parse_routes',
             'schedule': crontab(minute='*', hour='*'),  # TODO: every hour
         },
     },
 )
 
-celery = Celery('parse')
+celery = Celery('parse1')
 celery.config_from_object(celery_config)
 
 MONGODB_URI = environ.get('DB_PORT_27017_TCP_ADDR', 'localhost')
@@ -38,23 +31,21 @@ class YandexHelper:
     SOURCE_HTML = 'file://{}'.format(
         path.join(path.dirname(path.abspath(__file__)), 'index_parser.html')
     )
-
-    def __init__(self):
-        pass
-        #self.display = Display(visible=0, size=(800, 600))
-        #self.display.start()
-        #print(self.display)
-        #self.browser = webdriver.Firefox()
-        #self.browser.get(self.SOURCE_HTML)
-        # print(self.browser.page_source)
-
+    
     def __enter__(self):
         return self
 
     def _parse_html(self):
-        from subprocess import check_output, STDOUT
+        from subprocess import check_output, STDOUT, CalledProcessError
         from json import loads
-        result = check_output(["/opt/projects/yamaps-informer/src/node_modules/phantomjs/bin/phantomjs", "test1.js"], stderr=STDOUT)
+        print(path.join(path.dirname(path.abspath(__file__)), 'node_modules/phantomjs/bin/phantomjs'))
+        for i in range(5):
+            try:
+                result = check_output([path.join(path.dirname(path.abspath(__file__)), 'node_modules/phantomjs/bin/phantomjs'), "test1.js"], stderr=STDOUT)
+                break
+            except CalledProcessError:
+                print('Exception {}'.format(i))
+            
         formatted = loads(result.decode()[:-1])
         print(formatted)
         format_time = lambda x: int(float(x) // 60)
@@ -76,9 +67,6 @@ class YandexHelper:
         return item
 
     def get_routes(self):
-        #try:
-        #    vol = WebDriverWait(self.browser, 20).until(EC.presence_of_element_located((By.ID, "results")))
-        #finally:
         routes = self._parse_html()
         if not routes:
             print('No data')
@@ -88,9 +76,7 @@ class YandexHelper:
         return result
 
     def __exit__(self, exception_type, exception_value, traceback):
-        pass 
-        #self.browser.quit()
-        #self.display.stop()
+        pass
 
 
 if __name__ == "__main__":
