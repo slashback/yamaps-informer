@@ -20,6 +20,8 @@ parser:
 
 db:
   image: mongo:3.0.2
+  volumes:
+    - /var/lib/mongodb:/data/db
 
 amqp:
   image: rabbitmq:latest
