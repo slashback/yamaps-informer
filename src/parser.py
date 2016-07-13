@@ -7,12 +7,8 @@ from celery.schedules import crontab
 
 
 celery_config = dict(
-    BROKER_URL = 'amqp://{user}:{password}@{hostname}/{vhost}/'.format(
-        user='guest',
-        password='guest',
-        hostname=environ.get('AMQP_1_PORT_4369_TCP_ADDR', 'localhost'),
-        vhost=environ.get('RABBIT_ENV_VHOST', '')),
-    CELERY_RESULT_BACKEND = "amqp",
+    BROKER_URL = "mongodb://db:27017/celery_maps",
+    CELERY_RESULT_BACKEND = "mongodb",
     CELERYBEAT_SCHEDULE = {
         'every-hour': {
             'task': 'parser.parse_routes',

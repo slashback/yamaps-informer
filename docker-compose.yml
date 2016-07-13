@@ -15,7 +15,6 @@ parser:
     - C_FORCE_ROOT=true
   links:
     - db
-    - amqp
     - backend
 
 db:
@@ -23,5 +22,3 @@ db:
   volumes:
     - /var/lib/mongodb:/data/db
 
-amqp:
-  image: rabbitmq:latest
