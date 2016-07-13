@@ -1,26 +1,14 @@
-from os import path, environ
+from os import path
 from celery import Celery
-import json
 import datetime
 from pymongo import MongoClient
-from celery.schedules import crontab
+from .settings import celery_config, MONGODB_URI
+from subprocess import check_output, STDOUT, CalledProcessError
+from json import loads
 
-
-celery_config = dict(
-    BROKER_URL = "mongodb://db:27017/celery_maps",
-    CELERY_RESULT_BACKEND = "mongodb",
-    CELERYBEAT_SCHEDULE = {
-        'every-hour': {
-            'task': 'parser.parse_routes',
-            'schedule': crontab(minute='*/5', hour='3-19'),  # 6am-22pm MSK
-        },
-    },
-)
 
 celery = Celery('parser')
 celery.config_from_object(celery_config)
-
-MONGODB_URI = environ.get('DB_PORT_27017_TCP_ADDR', 'localhost')
 
 
 class YandexHelper:
@@ -30,8 +18,6 @@ class YandexHelper:
         return self
 
     def _parse_html(self):
-        from subprocess import check_output, STDOUT, CalledProcessError
-        from json import loads
         formatted = dict()
         print('Trying to parse...')
         print('Run phantomjs grab.js {}'.format(self.SOURCE_HTML))
@@ -44,9 +30,8 @@ class YandexHelper:
                 print('Exception {}'.format(i))
                 print(ex)
    
-        print(formatted)
         format_time = lambda x: int(float(x) // 60)
-        parsed = { k: format_time(w) for k,w in formatted.items() }
+        parsed = {k: format_time(w) for k, w in formatted.items()}
         print(parsed)
         return parsed
 
