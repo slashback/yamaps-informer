@@ -10,12 +10,13 @@ backend:
 parser:
   build: .
   dockerfile: parser.Dockerfile
-  command: python3 -m celery worker -A parse -B -s /tmp/celerybeat-schedule
+  command: python3 -m celery worker -A parser -B -s /tmp/celerybeat-schedule
   environment:
     - C_FORCE_ROOT=true
   links:
     - db
     - amqp
+    - backend
 
 db:
   image: mongo:3.0.2

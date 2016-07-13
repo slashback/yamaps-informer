@@ -2,21 +2,19 @@
   <head>
   <meta charset="UTF-8">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-  <script src="Chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
   <title>Нельзя просто так взять и выехать из Мытищ</title>
   </head>
   <body>
     <div>
       <canvas id="myChart" height="400px"></canvas>
     </div>
-
     <script>
+    var dataset = JSON.parse(`{% raw data %}`)
     var ctx = document.getElementById("myChart");
-
-    $.getJSON('/api/', function (dataset) {
-      console.log(dataset)
-      var labels = dataset.labels
-      var datasets = dataset.data.map(item => ({
+    var labels = dataset.labels
+    var datasets = dataset.data.map(function(item) {
+      return {
         label: item.name,
         fill: false,
         lineTension: 0.1,
@@ -36,30 +34,34 @@
         pointRadius: 1,
         pointHitRadius: 10,
         data: item.values,
-      }))
-
-      var data = {
-        labels,
-        datasets
-      };
-
-      var options = {
-        maintainAspectRatio: false,
-        responsive: true,
-        scales: {
-          yAxes: [{
-            ticks: {
-              beginAtZero:true
-            }
-          }]
-        }
       }
+    })
+    var datasets2 = dataset.data.map(function(item) {
+      return item.values
+    })                       
 
-      var myChartHome = new Chart(ctx, {
-        type: 'line',
-        data,
-        options,
-      });
+    var data = {
+      labels: labels,
+      datasets: datasets
+    };
+
+    var options = {
+      maintainAspectRatio: false,
+      responsive: true,
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero:true
+          }
+        }]
+      }
+    }
+    console.log("Data: ", datasets2)
+    console.log(labels)
+    var myChartHome = new Chart(ctx, {
+      type: 'line',
+      data: data,
+      options: options,
     });
     </script>
   </body>
