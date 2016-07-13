@@ -16,7 +16,7 @@ celery_config = dict(
     CELERYBEAT_SCHEDULE = {
         'every-hour': {
             'task': 'parse1.parse_routes',
-            'schedule': crontab(minute='*', hour='*'),  # TODO: every hour
+            'schedule': crontab(minute='*/5', hour='3-19'),  # 6am-22pm MSK
         },
     },
 )
@@ -42,7 +42,7 @@ class YandexHelper:
         print('Trying to parse...')
         for i in range(5):
             try:
-                result = check_output(['phantomjs', "test1.js"], stderr=STDOUT)
+                result = check_output(['phantomjs', "test2.js", path.join(path.dirname(path.abspath(__file__)), 'index_parser.html')], stderr=STDOUT)
                 formatted = loads(result.decode()[:-1])
                 break
             except CalledProcessError as ex:
