@@ -36,6 +36,9 @@
         data: item.values,
       }
     })
+    var datasets2 = dataset.data.map(function(item) {
+      return item.values
+    })                       
 
     var data = {
       labels: labels,
@@ -53,7 +56,8 @@
         }]
       }
     }
-
+    console.log("Data: ", datasets2)
+    console.log(labels)
     var myChartHome = new Chart(ctx, {
       type: 'line',
       data: data,
