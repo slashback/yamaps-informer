@@ -15,22 +15,20 @@ celery_config = dict(
     CELERY_RESULT_BACKEND = "amqp",
     CELERYBEAT_SCHEDULE = {
         'every-hour': {
-            'task': 'parse1.parse_routes',
+            'task': 'parser.parse_routes',
             'schedule': crontab(minute='*/5', hour='3-19'),  # 6am-22pm MSK
         },
     },
 )
 
-celery = Celery('parse1')
+celery = Celery('parser')
 celery.config_from_object(celery_config)
 
 MONGODB_URI = environ.get('DB_PORT_27017_TCP_ADDR', 'localhost')
 
 
 class YandexHelper:
-    SOURCE_HTML = 'file://{}'.format(
-        path.join(path.dirname(path.abspath(__file__)), 'index_parser.html')
-    )
+    SOURCE_HTML = path.join(path.dirname(path.abspath(__file__)), 'index_parser.html')
     
     def __enter__(self):
         return self
@@ -40,9 +38,10 @@ class YandexHelper:
         from json import loads
         formatted = dict()
         print('Trying to parse...')
+        print('Run phantomjs grab.js {}'.format(self.SOURCE_HTML))
         for i in range(5):
             try:
-                result = check_output(['phantomjs', "test2.js", path.join(path.dirname(path.abspath(__file__)), 'index_parser.html')], stderr=STDOUT)
+                result = check_output(['phantomjs', "grab.js", self.SOURCE_HTML], stderr=STDOUT)
                 formatted = loads(result.decode()[:-1])
                 break
             except CalledProcessError as ex:
