@@ -2,7 +2,7 @@ from os import path
 from celery import Celery
 import datetime
 from pymongo import MongoClient
-from .settings import celery_config, MONGODB_URI
+from settings import celery_config, MONGODB_URI
 from subprocess import check_output, STDOUT, CalledProcessError
 from json import loads
 
