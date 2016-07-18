@@ -10,16 +10,24 @@
       <canvas id="myChart" height="400px"></canvas>
     </div>
     <script>
+    var colors = [
+      ["rgba(75,192,192,0.4)", "rgba(75,192,192,1)"],
+      ["rgba(255,99,132,0.2)", "rgba(255,99,132,1)"], 
+      ["rgba(179,181,198,0.2)", "rgba(179,181,198,1)"], 
+      ["#36a2eb", "#36a2eb"] 
+    ]
     var dataset = JSON.parse(`{% raw data %}`)
     var ctx = document.getElementById("myChart");
     var labels = dataset.labels
     var datasets = dataset.data.map(function(item) {
+      var color = colors.pop();
+      console.log(color, colors);
       return {
         label: item.name,
         fill: false,
         lineTension: 0.1,
-        backgroundColor: "rgba(75,192,192,0.4)",
-        borderColor: "rgba(75,192,192,1)",
+        backgroundColor: color[0],
+        borderColor: color[1],
         borderCapStyle: 'butt',
         borderDash: [],
         borderDashOffset: 0.0,
