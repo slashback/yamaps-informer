@@ -9,18 +9,20 @@ from pymongo import MongoClient
 
 MONGODB_URI = os.environ.get('DB_PORT_27017_TCP_ADDR', 'localhost')
 
+
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
 
     if isinstance(obj, datetime.datetime):
         serial = obj.isoformat()
         return serial
-    raise TypeError ("Type not serializable")
+    raise TypeError("Type not serializable")
 
 
 class StaticHandler(tornado.web.RequestHandler):
     def get(self):
         self.render("index_parser.html", data={})
+
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
