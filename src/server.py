@@ -23,6 +23,18 @@ class StaticHandler(tornado.web.RequestHandler):
     def get(self):
         self.render("index_parser.html", data={})
 
+class RouteHandler(tornado.web.RequestHandler):
+    def post(self):
+        print('OK')
+        routeData = json.loads(self.get_argument('routeData'))
+        client = MongoClient(MONGODB_URI)
+        db = client.routes
+        routes = db['routeItems']
+
+
+        routes.insert(routeData)
+        print(routeData)
+
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
@@ -50,7 +62,7 @@ class MainHandler(tornado.web.RequestHandler):
                     values=value,
                 )
             )
-     
+
         res = json.dumps(
             dict(
                 labels=labels,
@@ -58,12 +70,14 @@ class MainHandler(tornado.web.RequestHandler):
             )
         )
         print(res)
-        self.render("index.html", data=res)
+        self.render("static/templates/index.html", data=res)
 
 if __name__ == "__main__":
     application = tornado.web.Application([
         (r"/", MainHandler),
-        (r'/(.*)', tornado.web.StaticFileHandler, {'path': '/opt/projects/yamaps-informer/src'}),
+        (r"/route", RouteHandler),
+        (r"/routes", RoutesListHandler),
+        (r'/(.*)', tornado.web.StaticFileHandler, {'path': '/opt/projects/yamaps-informer/src/static/templates'}),
     ])
     application.listen(8085)
     tornado.ioloop.IOLoop.current().start()

@@ -1,0 +1,142 @@
+<html>
+  <head>
+  <meta charset="UTF-8">
+  <!-- Compiled and minified CSS -->
+  <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/css/materialize.min.css">
+ <!-- Compiled and minified JavaScript -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/js/materialize.min.js"></script>
+  <script type="text/javascript" src="https://api-maps.yandex.ru/2.1/?lang=ru-RU"></script>
+  <style>
+    #page {
+      position: absolute;
+      right: 0px;
+      top: 0px;
+      left: 0px;
+      bottom: 0px;
+    }
+
+    #control-form{
+      position: fixed;
+      right: 40px;
+      top: 40px;
+      width: 300px;
+      height: 600px;
+      z-index: 1;
+    }
+  </style>
+  <title>Sample</title>
+  </head>
+  <body>
+  <div id="control-form">
+    <div class="card blue-grey darken-1">
+            <div class="card-content white-text">
+              <span class="card-title">Новый маршрут</span>
+              <p>Можно двигать точки начала и конца и добавлять промежуточные точки (нужно потянуть за линию маршрута)</p>
+              <input placeholder="Название" id="name" type="text"/>
+              <input placeholder="Описание" id="description" type="text"/>
+              <a class="waves-effect waves-light btn" onclick="change()">Сохранить</a>
+            </div>
+    </div>
+
+  </div>
+    <div id=page>
+      <div id="map" style="width:100%; height:100%"></div>
+
+    </div>
+    <script>
+    var coordinates = []
+    function init () {
+      var multiRoute = new ymaps.multiRouter.MultiRoute({
+          referencePoints: ["Москва", [55.85291424814013, 37.68412805566206]]
+      }, {
+          editorMidPointsType: "via",
+          editorDrawOver: false
+      });
+      // var buttonEditor = new ymaps.control.Button({
+      //     data: { content: "Режим редактирования" }
+      // });
+      //
+      // buttonEditor.events.add("select", function () {
+      //     multiRoute.editor.start({
+      //         //addWayPoints: true,
+      //         //removeWayPoints: true
+      //     });
+      // });
+      //
+      // buttonEditor.events.add("deselect", function () {
+      //     // Выключение режима редактирования.
+      //     multiRoute.editor.stop();
+      // });
+
+      // Создаем карту с добавленной на нее кнопкой.
+      var myMap = new ymaps.Map('map', {
+          center: [
+            55.832824252908594,
+            37.6491091347636
+          ],
+          zoom: 11,
+          controls: []
+      }, {
+          buttonMaxWidth: 300
+      });
+
+
+
+
+      multiRoute.editor.start()
+    myMap.geoObjects.add(multiRoute);
+
+    multiRoute.events.add("update",function () {
+      coordinates = []
+      var wayPoints = multiRoute.getWayPoints();
+      var viaPoints = multiRoute.getViaPoints();
+      coordinates.push(wayPoints.get(0).geometry.getCoordinates())
+      viaPoints.each(function (point){
+        console.log('__', point.geometry.getCoordinates())
+        coordinates.push(point.geometry.getCoordinates())
+      })
+      coordinates.push(wayPoints.get(1).geometry.getCoordinates())
+      console.log(coordinates)
+    });
+
+}
+
+ymaps.ready(init);
+
+      function change(){
+
+         var routeName = document.getElementById('name').value;
+         var routeDescription = document.getElementById('description').value;
+         if( routeName.length==0 ){
+             alert('Нужно ввести хотя бы название маршрута');
+         return;
+         }
+
+
+        console.log(coordinates)
+        routeData = JSON.stringify({
+          name: routeName,
+          description: routeDescription,
+          waypoints: coordinates
+        })
+        $.ajax({
+           url: "/route",
+           type: "POST",//type of posting the data
+           data: {
+             routeData
+           },
+           success: function (data) {
+             console.log('OK')
+             //what to do in success
+           },
+           error: function(xhr, ajaxOptions, thrownError){
+              console.log('NOT')
+           },
+           timeout : 15000//timeout of the ajax call
+      });
+      }
+    </script>
+  </body>
+</html>
