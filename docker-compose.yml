@@ -10,7 +10,7 @@ backend:
 parser:
   build: .
   dockerfile: parser.Dockerfile
-  command: python3 -m celery worker -A parser -B -s /tmp/celerybeat-schedule
+  command: cron && tail -f /tmp/test
   environment:
     - C_FORCE_ROOT=true
   links:

@@ -12,4 +12,9 @@ RUN ln -s /usr/local/share/phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/local
 RUN ln -s /usr/local/share/phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs
 RUN ln -s /usr/local/share/phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/bin/phantomjs 
 RUN pip3 install -r /app/requirements.txt
+RUN apt-get update && apt-get install -y cron nano
+RUN touch /tmp/test
+RUN crontab -l | { cat; echo "* * * * * echo 123 >> /tmp/test"; } | crontab -
+RUN crontab -l
+RUN cron
 WORKDIR /app
