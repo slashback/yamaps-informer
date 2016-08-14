@@ -9,18 +9,32 @@ from pymongo import MongoClient
 
 MONGODB_URI = os.environ.get('DB_PORT_27017_TCP_ADDR', 'localhost')
 
+
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
 
     if isinstance(obj, datetime.datetime):
         serial = obj.isoformat()
         return serial
-    raise TypeError ("Type not serializable")
+    raise TypeError("Type not serializable")
 
 
 class StaticHandler(tornado.web.RequestHandler):
     def get(self):
         self.render("index_parser.html", data={})
+
+class RouteHandler(tornado.web.RequestHandler):
+    def post(self):
+        print('OK')
+        routeData = json.loads(self.get_argument('routeData'))
+        client = MongoClient(MONGODB_URI)
+        db = client.routes
+        routes = db['routeItems']
+
+
+        routes.insert(routeData)
+        print(routeData)
+
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
@@ -48,7 +62,7 @@ class MainHandler(tornado.web.RequestHandler):
                     values=value,
                 )
             )
-     
+
         res = json.dumps(
             dict(
                 labels=labels,
@@ -56,12 +70,14 @@ class MainHandler(tornado.web.RequestHandler):
             )
         )
         print(res)
-        self.render("index.html", data=res)
+        self.render("static/templates/index.html", data=res)
 
 if __name__ == "__main__":
     application = tornado.web.Application([
         (r"/", MainHandler),
-        (r'/(.*)', tornado.web.StaticFileHandler, {'path': '/opt/projects/yamaps-informer/src'}),
+        (r"/route", RouteHandler),
+        (r"/routes", RoutesListHandler),
+        (r'/(.*)', tornado.web.StaticFileHandler, {'path': '/opt/projects/yamaps-informer/src/static/templates'}),
     ])
     application.listen(8085)
     tornado.ioloop.IOLoop.current().start()
