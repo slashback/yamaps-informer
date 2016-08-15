@@ -47,6 +47,7 @@ class MainHandler(tornado.web.RequestHandler):
         data = defaultdict(list)
         labels = []
         for item in cursor:
+            print(item)
             for key, value in item.items():
                 if key == "timestamp":
                     formatted = str(value.strftime('%H:%M'))
@@ -76,7 +77,7 @@ if __name__ == "__main__":
     application = tornado.web.Application([
         (r"/", MainHandler),
         (r"/route", RouteHandler),
-        (r"/routes", RoutesListHandler),
+        # (r"/routes", RoutesListHandler),
         (r'/(.*)', tornado.web.StaticFileHandler, {'path': '/opt/projects/yamaps-informer/src/static/templates'}),
     ])
     application.listen(8085)
