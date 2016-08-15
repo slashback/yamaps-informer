@@ -25,3 +25,6 @@ STATIC_PATH = path.join(path.dirname(path.abspath(__file__)), 'static')
 TEMPLATES_PATH = path.join(STATIC_PATH, 'templates')
 STATIC_PARSER_PATH = path.join(STATIC_PATH, 'parser')
 HTTP_SERVER_PORT = 8085
+COOKIE_SECRET = environ.get('COOKIE_SECRET', 'MY_SUPER_SECRET_COOKIE_SECRET')
+AUTH_MASTER_USER = environ.get('AUTH_MASTER_USER', 'admin')
+AUTH_MASTER_PASS = environ.get('AUTH_MASTER_PASS', 'dfcz')

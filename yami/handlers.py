@@ -5,24 +5,58 @@ import datetime
 from os import path
 from pymongo import MongoClient
 from tornado import web
-from yami.settings import TEMPLATES_PATH, MONGODB_URI
+from yami.models import Route
+from yami.store import RouteStore
+from yami import settings
+from yami.utils import basic_auth
+
+HTTP_BAD_REQUEST_CODE = 400
 
 
-class RouteHandler(web.RequestHandler):
+def check_credentials(user, pwd):
+    return user == settings.AUTH_MASTER_USER and \
+           pwd == settings.AUTH_MASTER_PASS
+
+
+class BaseHandler(web.RequestHandler):
+    def get_current_user(self):
+        return self.get_secure_cookie("user")
+
+
+@basic_auth(check_credentials)
+class RouteHandler(BaseHandler):
     def post(self):
-        print('OK')
         route_data = json.loads(self.get_argument('routeData'))
-        client = MongoClient(MONGODB_URI)
-        db = client.routes
-        routes = db['routeItems']
+        name = route_data.get('name', '')
+        description = route_data.get('description', '')
+        waypoints = route_data.get('waypoints', [])
+        if (
+            name == '' or
+            waypoints == []
+        ):
+            self.set_status(HTTP_BAD_REQUEST_CODE)
+            self.finish("You should specify route and its name")
 
-        routes.insert(route_data)
         print(route_data)
+        route = Route(name=name, description=description, waypoints=waypoints)
+        store = RouteStore()
+        _id = store.add(route)
+        print(_id)
 
 
-class MainHandler(web.RequestHandler):
+@basic_auth(check_credentials)
+class RoutesListHandler(BaseHandler):
     def get(self):
-        client = MongoClient(MONGODB_URI)
+        store = RouteStore()
+        routes_list = store.get_all()
+        self.write(
+            {'routes': routes_list}
+        )
+
+
+class MainHandler(BaseHandler):
+    def get(self):
+        client = MongoClient(settings.MONGODB_URI)
         db = client.routes
         routes = db['routes']
         from_midnight = datetime.datetime.combine(datetime.datetime.now().date(), datetime.time(0))
@@ -54,4 +88,4 @@ class MainHandler(web.RequestHandler):
             )
         )
         print(res)
-        self.render(path.join(TEMPLATES_PATH, "index.html"), data=res)
+        self.render(path.join(settings.TEMPLATES_PATH, "index.html"), data=res)

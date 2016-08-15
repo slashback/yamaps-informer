@@ -1,7 +1,7 @@
 # pylint: disable=too-few-public-methods
 
 from pymongo import MongoClient
-from yami.settings import MONGODB_URI
+from yami import settings
 
 
 class Waypoint:
@@ -11,24 +11,6 @@ class Waypoint:
 
     def export(self):
         return self.lat, self.lon
-
-
-class Route:
-    _fields = ('name', 'description', 'waypoints', '_id')
-
-    def __init__(self, name, description=None, waypoints=None, _id=None):
-        self.name = name
-        self.description = description
-        self.waypoints = waypoints or []
-        self._id = _id
-
-    def export(self):
-        return dict(
-            name=self.name,
-            description=self.description,
-            waypoints=[w.export() for w in self.waypoints],
-            _id=self._id
-        )
 
 
 class Graph:
@@ -51,7 +33,7 @@ class Graph:
 
 class GraphMongoRepo:
     def __init__(self):
-        client = MongoClient(MONGODB_URI)
+        client = MongoClient(settings.MONGODB_URI)
         self.db = client.graphs
 
     def add(self, graph):

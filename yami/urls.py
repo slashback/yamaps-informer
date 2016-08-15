@@ -1,9 +1,10 @@
 from tornado import web
-from yami.handlers import MainHandler, RouteHandler
-from yami.settings import TEMPLATES_PATH
+from yami.handlers import MainHandler, RouteHandler, RoutesListHandler
+from yami import settings
 
 url_handlers = [
-        (r"/", MainHandler),
-        (r"/route", RouteHandler),
-        (r'/(.*)', web.StaticFileHandler, {'path': TEMPLATES_PATH}),
-    ]
+    (r"/", MainHandler),
+    (r"/route", RouteHandler),
+    (r"/routes", RoutesListHandler),
+    (r'/(.*)', web.StaticFileHandler, {'path': settings.TEMPLATES_PATH}),
+]
