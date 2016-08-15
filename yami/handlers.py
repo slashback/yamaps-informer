@@ -6,7 +6,7 @@ from os import path
 from pymongo import MongoClient
 from tornado import web
 from yami.models import Route
-from yami.store import RouteStore
+from yami.store import RouteStore, DurationsStore
 from yami import settings
 from yami.utils import basic_auth
 
@@ -55,37 +55,42 @@ class RoutesListHandler(BaseHandler):
 
 
 class MainHandler(BaseHandler):
+    @staticmethod
+    def exists(r_list, route_name, timestamp):
+        for item in r_list:
+            if item.route['name'] == route_name and item.timestamp == timestamp:
+                return item.duration
+        return None
+
     def get(self):
-        client = MongoClient(settings.MONGODB_URI)
-        db = client.routes
-        routes = db['routes']
-        from_midnight = datetime.datetime.combine(datetime.datetime.now().date(), datetime.time(0))
-        cursor = routes.find({'timestamp': {'$gt': from_midnight}}, {'_id': 0})
-        data = defaultdict(list)
-        labels = []
-        for item in cursor:
-            print(item)
-            for key, value in item.items():
-                if key == "timestamp":
-                    formatted = str(value.strftime('%H:%M'))
-                    labels.append(formatted)
-                else:
-                    data[key].append(value)
-
-        datasets = []
-        for key, value in filter((lambda k: k != 'labels'), data.items()):
-            datasets.append(
-                dict(
-                    name=key,
-                    values=value,
-                )
-            )
-
-        res = json.dumps(
-            dict(
-                labels=labels,
-                data=datasets
-            )
+        from_midnight = datetime.datetime.combine(
+            datetime.datetime.now().date(),
+            datetime.time(0)
         )
-        print(res)
+        store = DurationsStore()
+        durations = store.get_by_date(date_from=from_midnight)
+        labels = list(set([d.timestamp for d in durations]))
+        labels.sort()
+        result = dict(
+            labels=[],
+            data=[],
+        )
+        result['labels'] = labels
+
+        print(labels)
+        routes = list(set([d.route['name'] for d in durations]))
+        print(routes)
+        for route in routes:
+            route_data = dict(
+                values=[],
+                name=route
+            )
+            for label in labels:
+                dur = self.exists(durations, route, label)
+                route_data['values'].append(dur)
+            result['data'].append(route_data)
+        result['labels'] = [str(l.strftime('%H:%M')) for l in result['labels']]
+        print(result)
+
+        res = json.dumps(result)
         self.render(path.join(settings.TEMPLATES_PATH, "index.html"), data=res)
