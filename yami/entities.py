@@ -1,7 +1,7 @@
-from pymongo import MongoClient
-from os import environ
+# pylint: disable=too-few-public-methods
 
-MONGODB_URI = environ.get('DB_PORT_27017_TCP_ADDR', 'localhost')
+from pymongo import MongoClient
+from yami.settings import MONGODB_URI
 
 
 class Waypoint:
@@ -59,4 +59,4 @@ class GraphMongoRepo:
 
     def get(self, _id):
         graph = self.db.find_one({'_id': _id})
-        
+        return graph

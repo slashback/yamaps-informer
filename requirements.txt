@@ -1,3 +1,4 @@
 pymongo
 tornado
 celery[mongodb]
+pylint

@@ -1,44 +1,27 @@
-import tornado.ioloop
-import tornado.web
+# pylint: disable=abstract-method
 from collections import defaultdict
 import json
-import os
 import datetime
-import time
+from os import path
 from pymongo import MongoClient
-
-MONGODB_URI = os.environ.get('DB_PORT_27017_TCP_ADDR', 'localhost')
-
-
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
-
-    if isinstance(obj, datetime.datetime):
-        serial = obj.isoformat()
-        return serial
-    raise TypeError("Type not serializable")
+from tornado import web
+from yami.settings import TEMPLATES_PATH, MONGODB_URI
 
 
-class StaticHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render("index_parser.html", data={})
-
-class RouteHandler(tornado.web.RequestHandler):
+class RouteHandler(web.RequestHandler):
     def post(self):
         print('OK')
-        routeData = json.loads(self.get_argument('routeData'))
+        route_data = json.loads(self.get_argument('routeData'))
         client = MongoClient(MONGODB_URI)
         db = client.routes
         routes = db['routeItems']
 
+        routes.insert(route_data)
+        print(route_data)
 
-        routes.insert(routeData)
-        print(routeData)
 
-
-class MainHandler(tornado.web.RequestHandler):
+class MainHandler(web.RequestHandler):
     def get(self):
-        raw_data = []
         client = MongoClient(MONGODB_URI)
         db = client.routes
         routes = db['routes']
@@ -71,14 +54,4 @@ class MainHandler(tornado.web.RequestHandler):
             )
         )
         print(res)
-        self.render("static/templates/index.html", data=res)
-
-if __name__ == "__main__":
-    application = tornado.web.Application([
-        (r"/", MainHandler),
-        (r"/route", RouteHandler),
-        # (r"/routes", RoutesListHandler),
-        (r'/(.*)', tornado.web.StaticFileHandler, {'path': '/opt/projects/yamaps-informer/src/static/templates'}),
-    ])
-    application.listen(8085)
-    tornado.ioloop.IOLoop.current().start()
+        self.render(path.join(TEMPLATES_PATH, "index.html"), data=res)

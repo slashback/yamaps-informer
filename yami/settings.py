@@ -1,4 +1,4 @@
-from os import environ
+from os import environ, path
 from celery.schedules import crontab
 
 
@@ -21,3 +21,7 @@ celery_config = dict(
     },
 )
 
+STATIC_PATH = path.join(path.dirname(path.abspath(__file__)), 'static')
+TEMPLATES_PATH = path.join(STATIC_PATH, 'templates')
+STATIC_PARSER_PATH = path.join(STATIC_PATH, 'parser')
+HTTP_SERVER_PORT = 8085
