@@ -1,9 +1,7 @@
 # pylint: disable=abstract-method
-from collections import defaultdict
 import json
 import datetime
 from os import path
-from pymongo import MongoClient
 from tornado import web
 from yami.models import Route
 from yami.store import RouteStore, DurationsStore
