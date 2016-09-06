@@ -41,3 +41,18 @@ class Duration:
             route_id=self.route_id,
             timestamp=self.timestamp,
         )
+
+
+class Chart:
+    def __init__(self, name, routes=None):
+        self.name = name
+        self.routes = routes or []
+
+    def __repr__(self):
+        return 'Chart: {} with {} routes'.format(self.name, len(self.routes))
+
+    def to_dict(self):
+        return dict(
+            name=self.name,
+            routes=self.routes,
+        )

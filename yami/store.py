@@ -108,3 +108,24 @@ class DurationsStore:
             d = Duration(**duration_data)
             durations.append(d)
         return durations
+
+
+class ChartStore:
+    def __init__(self, provider=MongodbProvider):
+        self.store_name = 'charts'
+        self.provider = provider(self.store_name)
+
+    def get(self, chart_id):
+        route = self.provider.get(chart_id)
+        return route
+
+    def add(self, chart):
+        _id = self.provider.add(chart.to_dict())
+        return _id
+
+    def get_all(self):
+        charts = self.provider.get_all()
+        for chart in charts:
+            chart['routes'] = [str(r) for r in chart['routes']]
+            # print(chart)
+        return charts
