@@ -1,9 +1,28 @@
 import React, { Component } from 'react'
 import ChartList from './chart_list'
+import request from 'superagent'
 
 class ChartPage extends Component {
+
+  constructor(props) {
+        super(props);
+        this.state = {
+          charts: [],
+        };
+     }
+
+     componentDidMount() {
+         var self = this
+         request.get('/api/charts').end(function(err, res){
+           const chartList = res.body.chart_list
+           self.setState({
+             charts: chartList
+           })
+        });
+     }
+
   render() {
-    const charts = [
+    const testData = [
       {
         name: 'Work',
         labels: [
@@ -42,9 +61,8 @@ class ChartPage extends Component {
     ]
     return (
       <div>
-        foo
         <ChartList
-          chartList={charts}
+          chartList={this.state.charts}
         />
       </div>
     )
