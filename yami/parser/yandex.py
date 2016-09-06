@@ -19,7 +19,7 @@ class YandexHelper:
         grab_path = path.join(base_dir, 'grab.js')
         client_html_path = path.join(base_dir, 'index_parser.html')
         route_json = dumps(route)
-        print("Run phantomjs grab.js {} '{}'".format(client_html_path, route_json))
+        print("Run phantomjs {} {} '{}'".format(grab_path, client_html_path, route_json))
         for i in range(5):
             try:
                 output = check_output(
