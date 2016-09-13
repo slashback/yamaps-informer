@@ -35,11 +35,11 @@ class RouteHandler(BaseHandler):
             self.set_status(HTTP_BAD_REQUEST_CODE)
             self.finish("You should specify route and its name")
 
-        print(route_data)
+        # print(route_data)
         route = Route(name=name, description=description, waypoints=waypoints)
         store = RouteStore()
         _id = store.add(route)
-        print(_id)
+        # print(_id)
 
 
 @basic_auth(check_credentials)
@@ -75,8 +75,8 @@ class ChartListHandler(BaseHandler):
         )
         store = DurationsStore()
         durations1 = store.get_by_date(date_from=from_midnight)
-        for d in durations1:
-            print('__{}'.format(d))
+        # for d in durations1:
+        #     print('__{}'.format(d))
 
         chart_result = []
         for chart in chart_list:
@@ -95,9 +95,9 @@ class ChartListHandler(BaseHandler):
             )
             result['labels'] = labels
 
-            print(labels)
+            # print(labels)
             routes = list(set([d.route['name'] for d in durations]))
-            print(routes)
+            # print(routes)
             for route in routes:
                 route_data = dict(
                     values=[],
@@ -108,9 +108,9 @@ class ChartListHandler(BaseHandler):
                     route_data['values'].append(dur)
                 result['data'].append(route_data)
             result['labels'] = [str(l.strftime('%H:%M')) for l in result['labels']]
-            print(result)
+            # print(result)
             chart_result.append(result)
-            print('------------------------------------------------------------')
+            # print('------------------------------------------------------------')
         self.write(
             {'chart_list': chart_result}
         )
