@@ -59,15 +59,31 @@ class ChartItem extends Component {
       labels: chartItem.labels,
       datasets: datasets
     }
+    const longChart = chartItem.labels.length > 40
+    const longChartStyle = { minWidth: "500px"}
+
     return (
       <div
-        className="chart"
-        style={{ minWidth: "500px"}}
+        className="chart-item-wrapper"
+        style={{
+          overflowX: "auto",
+        }}
       >
-        <Line
-          options={chartOptions}
-          height={400}
-          data={chartData}
+        <div
+          className="chart"
+          style={ longChart ? longChartStyle : {} }
+        >
+          <Line
+            options={chartOptions}
+            height={400}
+            data={chartData}
+          />
+        </div>
+        <hr
+          style={{
+            borderTop: "1px dotted #8c8b8b",
+            margin: "30px 0",
+          }}
         />
       </div>
     )

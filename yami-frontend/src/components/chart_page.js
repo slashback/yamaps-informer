@@ -63,6 +63,19 @@ class ChartPage extends Component {
     ]
     return (
       <div>
+        <div
+          style={{ padding: "10px 0" }}
+        >
+          <span
+            style={{
+              fontSize: "20px",
+              fontFamily: "Georgia",
+              color: "#707070",
+            }}
+          >
+            Нельзя просто так взять и выехать из Мытищ
+          </span>
+        </div>
         <ChartList
           chartList={this.state.charts}
         />
