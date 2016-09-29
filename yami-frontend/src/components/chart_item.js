@@ -60,7 +60,10 @@ class ChartItem extends Component {
       datasets: datasets
     }
     return (
-      <div>
+      <div
+        className="chart"
+        style={{ minWidth: "500px"}}
+      >
         <Line
           options={chartOptions}
           height={400}

@@ -8,7 +8,9 @@ class ChartList extends Component {
   render() {
     const chartList = this.props.chartList || []
     return (
-      <div>
+      <div
+        style={{ overflowX: "auto"}}
+      >
         {
           chartList.map(chart => (
             <ChartItem item={chart} />
