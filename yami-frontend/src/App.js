@@ -9,6 +9,7 @@ class App extends Component {
       <div className="App">
         <Router history={browserHistory}>
             <Route path="/" component={ChartPage} />
+            <Route path="/:daysAgo" component={ChartPage} />
           </Router>
       </div>
     );

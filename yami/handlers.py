@@ -60,23 +60,22 @@ class ChartListHandler(BaseHandler):
                 return item.duration
         return None
 
-    def get(self):
+    def get(self, days_ago):
         store = ChartStore()
         chart_list = store.get_all()
-        # self.write(
-        #     {'routes': chart_list}
-        # )
-        # for chart in chart_list:
-        #     print(chart)
 
-        from_midnight = datetime.datetime.combine(
-            datetime.datetime.now().date(),
+        date_from = datetime.datetime.now() - datetime.timedelta(days=int(days_ago))
+        date_from_midnight = datetime.datetime.combine(
+            date_from.date(),
             datetime.time(0)
         )
+        date_till = date_from_midnight + datetime.timedelta(days=1)
+
         store = DurationsStore()
-        durations1 = store.get_by_date(date_from=from_midnight)
-        # for d in durations1:
-        #     print('__{}'.format(d))
+        durations1 = store.get_by_date(
+            date_from=date_from_midnight,
+            date_till=date_till
+        )
 
         chart_result = []
         for chart in chart_list:
@@ -84,7 +83,6 @@ class ChartListHandler(BaseHandler):
             for d in durations1:
                 if d.route_id in chart['routes']:
                     durations.append(d)
-                    # print('CHART {}, ROU {}'.format(chart['name'], d.route_id))
 
             labels = list(set([d.timestamp for d in durations]))
             labels.sort()
@@ -95,9 +93,7 @@ class ChartListHandler(BaseHandler):
             )
             result['labels'] = labels
 
-            # print(labels)
             routes = list(set([d.route['name'] for d in durations]))
-            # print(routes)
             for route in routes:
                 route_data = dict(
                     values=[],
@@ -108,9 +104,7 @@ class ChartListHandler(BaseHandler):
                     route_data['values'].append(dur)
                 result['data'].append(route_data)
             result['labels'] = [str(l.strftime('%H:%M')) for l in result['labels']]
-            # print(result)
             chart_result.append(result)
-            # print('------------------------------------------------------------')
         self.write(
             {'chart_list': chart_result}
         )

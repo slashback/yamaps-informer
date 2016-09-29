@@ -13,7 +13,9 @@ class ChartPage extends Component {
 
      componentDidMount() {
          var self = this
-         request.get('/api/charts').end(function(err, res){
+         const daysAgo = this.props.params.daysAgo || 0
+         const chartsUrl = `/api/charts/${daysAgo}`
+         request.get(chartsUrl).end(function(err, res){
            const chartList = res.body.chart_list
            self.setState({
              charts: chartList
