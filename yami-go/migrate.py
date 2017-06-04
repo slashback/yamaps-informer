@@ -2,6 +2,7 @@
 import datetime
 import psycopg2
 from pymongo import MongoClient
+from json import dumps
 
 
 def get_route_items():
@@ -43,7 +44,8 @@ def add_route_item(route_item):
         INSERT INTO routes (name, description, waypoints) 
         VALUES (%s, %s, %s) returning uid
     """
-    params = (route_item['name'], route_item['description'], route_item['waypoints'])
+    waypoints = dumps(route_item["waypoints"])
+    params = (route_item['name'], route_item['description'], waypoints)
     cur.execute(query, params)
     uid, = cur.fetchone()
     cur.close()

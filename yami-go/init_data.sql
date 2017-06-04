@@ -6,7 +6,7 @@ CREATE TABLE routes
         uid serial primary key,
         name character varying(100) NOT NULL,
         description character varying(100) NOT NULL,
-        waypoints text[]
+        waypoints text
     )
     WITH (OIDS=FALSE);
 
