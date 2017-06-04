@@ -1,187 +1,262 @@
-    package main
+package main
 
-    import (
-        "database/sql"
-        "fmt"
-        _ "github.com/lib/pq"
-        "time"
-    )
+import (
+    "database/sql"
+    "fmt"
+    _ "github.com/lib/pq"
+    "time"
+    "net/http"
+    "encoding/json"
+)
 
-    const (
-        DB_USER     = "postgres"
-        DB_PASSWORD = "postgres"
-        DB_NAME     = "routes"
-    )
+const (
+    dbUser     = "postgres"
+    dbPassword = "postgres"
+    dbName     = "routes"
+)
 
-    // Routes route
-    type Routes struct {
-        routeID int
-        name string
+// Routes route
+type Routes struct {
+    routeID int
+    name string
+}
+
+type pgChartRouteItem struct {
+    chartID     int
+    chartName   string
+    routeID     int
+}
+
+func contains(s []string, e string) bool {
+    for _, a := range s {
+        if a == e {
+            return true
+        }
     }
+    return false
+}
 
-    type pgChartItem struct {
-        uid      int
-        name     string
-        routeIDS []int
+func getBeginningOfTheDay(timestamp time.Time) time.Time {
+    year, month, day := timestamp.Date()
+    return time.Date(year, month, day, 0, 0, 0, 0, timestamp.Location())
+}
+
+func getEndOfTheDay(timestamp time.Time) time.Time {
+    tomorrow := timestamp.Add(24 * time.Hour)
+    year, month, day := tomorrow.Date()
+    return time.Date(year, month, day, 0, 0, 0, 0, timestamp.Location())
+}
+
+func getDateByDaysAgo(timestamp time.Time, daysAgo int) time.Time {
+    shift := -time.Duration(daysAgo * 24)
+    tomorrow := timestamp.Add(shift * time.Hour)
+    return tomorrow
+}
+
+func buildChartRoutesMap(routes []pgChartRouteItem) map[int][]int {
+    result := make(map[int][]int)
+    for _, item := range routes {
+        result[item.chartID] = append(result[item.chartID], item.routeID)
     }
+    return result
+}
 
-    func contains(s []time.Time, e time.Time) bool {
-        for _, a := range s {
-            if a == e {
-                return true
+
+func getChartsRoutes() map[int][]int {
+    routes := make([]pgChartRouteItem, 0)
+    dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
+        dbUser, dbPassword, dbName)
+    db, err := sql.Open("postgres", dbinfo)
+    checkErr(err)
+    defer db.Close()
+    chartRoutes, err := db.Query(`
+        SELECT c.uid, c.name, r.uid
+        FROM charts c
+        JOIN chart_routes cr on c.uid = cr.chart_id
+        JOIN routes r on r.uid = cr.route_id
+        ORDER BY c.uid, r.uid     
+    `)
+    checkErr(err)
+
+    for chartRoutes.Next() {
+        var chartID int
+        var chartName string
+        var routeID int
+        err = chartRoutes.Scan(&chartID, &chartName, &routeID)
+        checkErr(err)
+        item := pgChartRouteItem{chartID, chartName, routeID}
+        routes = append(routes, item)
+    }
+    chartRouteMap := buildChartRoutesMap(routes)
+    return chartRouteMap
+}
+
+func formatTimeStamp(timestamp time.Time) string {
+    return timestamp.Format("15:04")
+}
+
+type pgDurationItem struct {
+    routeID   int
+    duration  string
+}
+
+func getUniqueDurationTimestamps(from time.Time, till time.Time) []string {
+    timestamps := make([]string, 0)
+    dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
+        dbUser, dbPassword, dbName)
+    db, err := sql.Open("postgres", dbinfo)
+    checkErr(err)
+    defer db.Close()
+    stmt, err := db.Prepare(`
+        SELECT distinct TO_CHAR(durations.check_time, 'HH24:MI') from durations 
+        where check_time between $1 and $2 order by TO_CHAR(durations.check_time, 'HH24:MI')
+    `)
+    checkErr(err)
+    durations, err := stmt.Query(from, till)
+    checkErr(err)
+    for durations.Next() {
+        var timestamp string
+        err = durations.Scan(&timestamp)
+        checkErr(err)
+        if contains(timestamps, timestamp) != true {
+            timestamps = append(timestamps, timestamp)
+        }
+    }
+    return timestamps
+}
+
+func addDuration(storage map[int]map[string]int, routeID int, checkTime string, duration int) {
+    mm, ok := storage[routeID]
+    if !ok {
+        mm = make(map[string]int)
+        storage[routeID] = mm
+    }
+    mm[checkTime] = duration
+}
+
+type chartLine struct {
+    RouteID int
+    RouteName string    `json:"name"`
+    Timestamps []int    `json:"values"`
+}
+
+type chart struct {
+    Data []chartLine    `json:"data"`
+    Labels []string     `json:"labels"`
+}
+
+type chartList struct {
+    ChartList []chart   `json:"chart_list"`
+}
+
+func remapDurations(rawDurations map[int]map[string]int, timestamps *[]string, routes *[]Routes, chartRoutes map[int][]int) chartList{
+    chartListItem := make([]chart, 0)
+    for chartID, routeIDS := range chartRoutes {
+        fmt.Println(chartID, routeIDS)
+        lines := make([]chartLine, 0)
+        for _, routeID := range routeIDS {
+            lineValues := make([]int, 0)
+            durations := rawDurations[routeID]
+            for _, timestamp := range *timestamps {
+                lineValues = append(lineValues, durations[timestamp])
             }
+            line := chartLine{routeID, "routeName", lineValues}
+            lines = append(lines, line)
         }
-        return false
+        chartItem := chart{lines, *timestamps}
+        chartListItem = append(chartListItem, chartItem)
     }
+    return chartList{chartListItem}
+}
 
-    func getBeginningOfTheDay(timestamp time.Time) time.Time {
-        year, month, day := timestamp.Date()
-        return time.Date(year, month, day, 0, 0, 0, 0, timestamp.Location())
-    }
+func fetchDurationsByDate(from time.Time, till time.Time) *sql.Rows {
+    dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
+        dbUser, dbPassword, dbName)
+    db, err := sql.Open("postgres", dbinfo)
+    checkErr(err)
+    defer db.Close()
+    stmt, err := db.Prepare("SELECT uid, route_id, duration, check_time FROM durations where check_time between $1 and $2")
+    checkErr(err)
+    durations, err := stmt.Query(from, till)
+    checkErr(err)
+    return durations
+}
 
-    func getEndOfTheDay(timestamp time.Time) time.Time {
-        tomorrow := timestamp.Add(24 * time.Hour)
-        year, month, day := tomorrow.Date()
-        return time.Date(year, month, day, 0, 0, 0, 0, timestamp.Location())
-    }
+func getRoutes() []Routes {
+    routesList := make([]Routes, 0)
+    dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
+        dbUser, dbPassword, dbName)
+    db, err := sql.Open("postgres", dbinfo)
+    checkErr(err)
+    defer db.Close()
+    routes, err := db.Query("SELECT uid, name FROM routes")
+    checkErr(err)
 
-    func getDateByDaysAgo(timestamp time.Time, daysAgo int) time.Time {
-        shift := -time.Duration(daysAgo * 24)
-        tomorrow := timestamp.Add(shift * time.Hour)
-        return tomorrow
-    }
-
-
-    func getCharts() []pgChartItem {
-        chartList := make([]pgChartItem, 0)
-        dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
-            DB_USER, DB_PASSWORD, DB_NAME)
-        db, err := sql.Open("postgres", dbinfo)
+    for routes.Next() {
+        var uid int
+        var name string
+        err = routes.Scan(&uid, &name)
         checkErr(err)
-        defer db.Close()
-        charts, err := db.Query("SELECT uid, name FROM charts")
-        checkErr(err)
+        routesList = append(routesList, Routes{uid, name})
+    }
+    return routesList
+}
 
-        for charts.Next() {
-            var uid int
-            var name string
-            routeIDS := make([]int, 0)
-            err = charts.Scan(&uid, &name)
-            checkErr(err)
-            fmt.Println("uid | name")
-            fmt.Printf("%3v | %4v \n", uid, name) 
-            stmt, err := db.Prepare("SELECT route_id FROM chart_routes where chart_id=$1")
-            checkErr(err)
-            routes, err := stmt.Query(uid)
-            checkErr(err)
-            for routes.Next() {
-                var routeID int
-                err = routes.Scan(&routeID)
-                routeIDS = append(routeIDS, routeID)
-            }
-            chartList = append(chartList, pgChartItem{uid, name, routeIDS})
-        }
-        return chartList
+func getDurationsByDate(from time.Time, till time.Time) chartList{
+    durationsMap := make(map[int]map[string]int)
+    timestamps := getUniqueDurationTimestamps(from, till)
+    durations := fetchDurationsByDate(from, till)
+    routes := getRoutes()
+    routeCharts := getChartsRoutes()
+
+    for durations.Next() {
+        var uid int
+        var routeID int
+        var duration int
+        var checkTime time.Time
+        err := durations.Scan(&uid, &routeID, &duration, &checkTime)
+        checkErr(err)
+        formattedCheckTime := formatTimeStamp(checkTime)
+        addDuration(durationsMap, routeID, formattedCheckTime, duration)
     }
 
-    func getDurationsByDate(from time.Time, till time.Time) {
-        dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
-            DB_USER, DB_PASSWORD, DB_NAME)
-        db, err := sql.Open("postgres", dbinfo)
-        checkErr(err)
-        defer db.Close()
+    return remapDurations(durationsMap, &timestamps, &routes, routeCharts)
+}
 
-        stmt, err := db.Prepare("SELECT uid, route_id, duration, check_time FROM durations where check_time between $1 and $2")
-        checkErr(err)
-        durations, err := stmt.Query(from, till)
-        checkErr(err)
-        for durations.Next() {
-            var uid int
-            var routeID int
-            var duration string
-            var checkTime time.Time
-            err = durations.Scan(&uid, &routeID, &duration, &checkTime)
-            fmt.Printf("%3v | %8v | %10v | %7v\n", uid, routeID, duration, checkTime)
-            // routeIDS = append(routeIDS, routeID)
-        }
+// debug function
+func handleGetCharts(daysShift int) {
+    targetDay := getDateByDaysAgo(time.Now(), daysShift)
+    timeFrom := getBeginningOfTheDay(targetDay)
+    timeTill := getEndOfTheDay(targetDay)
+    charts := getDurationsByDate(timeFrom, timeTill)
+    chartJSON, _ := json.Marshal(charts)
+    fmt.Sprintf(string(chartJSON))
+}
+
+func chartsHandler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    daysShift := 12
+    targetDay := getDateByDaysAgo(time.Now(), daysShift)
+    timeFrom := getBeginningOfTheDay(targetDay)
+    timeTill := getEndOfTheDay(targetDay)
+    charts := getDurationsByDate(timeFrom, timeTill)
+    chartJSON, _ := json.Marshal(charts)
+    fmt.Println(string(chartJSON))
+    fmt.Fprintf(w, string(chartJSON))
+}
+
+func checkErr(err error) {
+    if err != nil {
+        panic(err)
     }
+}
 
-    func handleGetCharts(daysShift int) {
-        charts := getCharts()
-        fmt.Println(charts)
-        targetDay := getDateByDaysAgo(time.Now(), daysShift)
-        timeFrom := getBeginningOfTheDay(targetDay)
-        timeTill := getEndOfTheDay(targetDay)
-        fmt.Println(targetDay)
-        fmt.Println(timeFrom)
-        fmt.Println(timeTill)
-        getDurationsByDate(timeFrom, timeTill)
-    }
-
-    func main() {
-        handleGetCharts(7)
-
-
-        // dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
-        //     DB_USER, DB_PASSWORD, DB_NAME)
-        // db, err := sql.Open("postgres", dbinfo)
-        // checkErr(err)
-        // defer db.Close()
-
-
-        // timestamps := make([]time.Time, 0)
-
-
-        // routes := getRoutes()
-        // for _, route := range routes {
-        //     fmt.Println(route)
-
-        //     stmt, err := db.Prepare("SELECT uid, route_id, duration, check_time FROM durations where route_id=$1")
-        //     checkErr(err)
-        //     rows, err := stmt.Query(route.routeID)
-        //     checkErr(err)
-        //     for rows.Next() {
-        //         var uid int
-        //         var routeID int
-        //         var duration string
-        //         var checkTime time.Time
-        //         err = rows.Scan(&uid, &routeID, &duration, &checkTime)
-        //         checkErr(err)
-        //         fmt.Println("uid | username | department | created ")
-        //         fmt.Printf("%3v | %8v | %10v | %7v\n", uid, routeID, duration, checkTime)
-        //         if contains(timestamps, checkTime) != true {
-        //             fmt.Println("NOT CONT")
-        //             timestamps = append(timestamps, checkTime)
-        //         }
-        //     }
-        // }
-        // fmt.Println(timestamps)
-    }
-
-    func checkErr(err error) {
-        if err != nil {
-            panic(err)
-        }
-    }
-
-    func getRoutes() []Routes {
-        routesList := make([]Routes, 0)
-        dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
-            DB_USER, DB_PASSWORD, DB_NAME)
-        db, err := sql.Open("postgres", dbinfo)
-        checkErr(err)
-        defer db.Close()
-        routes, err := db.Query("SELECT uid, name FROM routes")
-        checkErr(err)
-
-        for routes.Next() {
-            var uid int
-            var name string
-            err = routes.Scan(&uid, &name)
-            checkErr(err)
-            fmt.Println("uid | name")
-            fmt.Printf("%3v | %4v \n", uid, name) 
-            routesList = append(routesList, Routes{uid, name})
-        }
-        return routesList
-    }
+func main() {
+    start := time.Now()
+    handleGetCharts(12)
+    elapsed := time.Since(start)
+    fmt.Printf("took %s", elapsed)
+    http.HandleFunc("/api/charts", chartsHandler)
+    http.HandleFunc("/api/charts/0", chartsHandler)
+    http.ListenAndServe(":8080", nil)
+}
