@@ -1,4 +1,4 @@
-package main
+package parser
 
 import (
 	"os/exec"
@@ -72,7 +72,7 @@ func getRouteWaypoints() []route{
 	return waypointsList
 }
 
-func main() {
+func parser() {
 	routesList := getRouteWaypoints()
 	for _, route := range routesList {
 		duration := getDuration(route.waypoints)
