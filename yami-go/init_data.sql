@@ -14,7 +14,7 @@ CREATE TABLE routes
 
 CREATE TABLE durations
     (
-        uid serial primary key,
+        uid bigserial primary key,
         route_id integer references routes(uid),
         duration integer NOT NULL,
         check_time timestamp
