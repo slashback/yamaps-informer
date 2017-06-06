@@ -41,15 +41,6 @@ func getDateByDaysAgo(timestamp time.Time, daysAgo int) time.Time {
     return tomorrow
 }
 
-func addDuration(storage map[int]map[string]int, routeID int, checkTime string, duration int) {
-    mm, ok := storage[routeID]
-    if !ok {
-        mm = make(map[string]int)
-        storage[routeID] = mm
-    }
-    mm[checkTime] = duration
-}
-
 func remapDurations(rawDurations map[int]map[string]int, timestamps *[]string, routes []*models.Route, chartRoutes map[int][]int) chartList{
     chartListItem := make([]chart, 0)
     for chartID, routeIDS := range chartRoutes {
