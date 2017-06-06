@@ -7,7 +7,8 @@ import (
 // Route route
 type Route struct {
     routeID int
-    name string
+    Name string
+    Waypoints string
 }
 
 type duration struct {
@@ -39,7 +40,7 @@ func contains(s []string, e string) bool {
 // GetRoutes represents list of route items
 func GetRoutes() []*Route {
     routesList := make([]*Route, 0)
-    routes, err := db.Query("SELECT uid, name FROM routes")
+    routes, err := db.Query("SELECT uid, name, waypoints FROM routes")
 	defer routes.Close()
 	if err != nil {
         panic(err)
@@ -47,7 +48,7 @@ func GetRoutes() []*Route {
 
     for routes.Next() {
 		route := new(Route)
-        err = routes.Scan(&route.routeID, &route.name)
+        err = routes.Scan(&route.routeID, &route.Name, &route.Waypoints)
         if err != nil {
 			panic(err)
 		}
