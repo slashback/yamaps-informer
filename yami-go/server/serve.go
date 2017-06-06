@@ -6,7 +6,7 @@ import (
     "time"
     "net/http"
     "encoding/json"
-    "./models"
+    "../models"
 )
 
 type chartLine struct {
