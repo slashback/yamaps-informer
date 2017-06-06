@@ -27,15 +27,15 @@ CREATE TABLE durations
 	uid serial primary key,
 	name text
     );
-    insert into charts (name) values
-    ('Main Chart');
-
+ 
     CREATE TABLE chart_routes
     (
 	chart_id integer references charts(uid),
 	route_id integer references routes(uid)
     );
-/*    
+/*
+insert into charts (name) values ('Main Chart');
+    
 insert into chart_routes (chart_id, route_id) values 
     (1,1),
     (1,2),
