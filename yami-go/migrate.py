@@ -83,13 +83,19 @@ def add_route_item(conn, route_item):
 
 def add_duration(conn, duration_item, route_item_id):
     """foo"""
+    if not route_item_id or duration_item['duration'] > 1000:
+        return
     cur = conn.cursor()
     query = """
         INSERT INTO durations (route_id, check_time, duration) 
         VALUES (%s, %s, %s)
     """
     params = (route_item_id, duration_item['timestamp'], duration_item['duration'])
-    cur.execute(query, params)
+    try:
+        cur.execute(query, params)
+    except:
+        print(params)
+        raise
     cur.close()
 
 def add_chart(conn, chart):
