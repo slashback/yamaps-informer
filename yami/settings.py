@@ -1,5 +1,4 @@
 from os import environ, path
-from celery.schedules import crontab
 
 
 if environ.get('IN_DOCKER', None):
@@ -8,7 +7,7 @@ else:
     MONGODB_HOST = 'localhost'
 
 MONGODB_URI = "mongodb://{}:27017".format(MONGODB_HOST)
-CELERY_DB_NAME = 'celery_maps'
+"""CELERY_DB_NAME = 'celery_maps'
 
 celery_config = dict(
     BROKER_URL="{}/{}".format(MONGODB_URI, CELERY_DB_NAME),
@@ -20,7 +19,7 @@ celery_config = dict(
         },
     },
 )
-
+"""
 STATIC_PATH = path.join(path.dirname(path.abspath(__file__)), 'static')
 TEMPLATES_PATH = path.join(STATIC_PATH, 'templates')
 STATIC_PARSER_PATH = path.join(STATIC_PATH, 'parser')
