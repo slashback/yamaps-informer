@@ -4,35 +4,33 @@ drop table routes;
 drop table charts;
 
 CREATE TABLE routes
-    (
-        uid serial primary key,
-        name character varying(100) NOT NULL,
-        description character varying(100) NOT NULL,
-        waypoints text
-    )
-    WITH (OIDS=FALSE);
+(
+    uid serial primary key,
+    name character varying(100) NOT NULL,
+    description character varying(100) NOT NULL,
+    waypoints text
+) WITH (OIDS=FALSE);
 
 CREATE TABLE durations
-    (
-        uid bigserial primary key,
-        route_id integer references routes(uid),
-        duration integer NOT NULL,
-        check_time timestamp
-    )
-    WITH (OIDS=FALSE);
+(
+    uid bigserial primary key,
+    route_id integer references routes(uid),
+    duration integer NOT NULL,
+    check_time timestamp
+) WITH (OIDS=FALSE);
+CREATE INDEX checkTimeIdx ON durations (check_time);
 
-
-    CREATE TABLE charts
-    (
-	uid serial primary key,
-	name text
-    );
+CREATE TABLE charts
+(
+    uid serial primary key,
+    name text
+);
  
-    CREATE TABLE chart_routes
-    (
-	chart_id integer references charts(uid),
-	route_id integer references routes(uid)
-    );
+CREATE TABLE chart_routes
+(
+    chart_id integer references charts(uid),
+    route_id integer references routes(uid)
+);
 /*
 insert into charts (name) values ('Main Chart');
     
