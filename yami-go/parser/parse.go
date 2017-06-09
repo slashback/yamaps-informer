@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"strconv"
+	"time"
 	"../models"
 )
 
@@ -52,9 +53,12 @@ func main() {
     dbinfo := fmt.Sprintf("postgres://%s:%s@localhost/%s", dbUser, dbPass, dbName)
     models.InitDB(dbinfo)
 	routesList := models.GetRoutes()
+	checkTime := time.Now()
 	for _, r := range routesList {
 		route := *r
 		duration := getDuration(route.Waypoints)
+		durationItem := models.Duration{RouteID: route.RouteID, CheckTime: checkTime, Duration: duration}
+		models.AddDuration(durationItem)
 		fmt.Printf("Route %s: %d\n", route.Name, duration)
 	}
 }

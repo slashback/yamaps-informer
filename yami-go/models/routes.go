@@ -6,16 +6,17 @@ import (
 
 // Route route
 type Route struct {
-    routeID int
+    RouteID int
     Name string
     Waypoints string
 }
 
-type duration struct {
-	durationID int
-	routeID int
-	duration int
-	checkTime time.Time
+// Duration represents duration item in db
+type Duration struct {
+	DurationID int
+	RouteID int
+	Duration int
+	CheckTime time.Time
 }
 
 type chartRouteItem struct {
@@ -48,7 +49,7 @@ func GetRoutes() []*Route {
 
     for routes.Next() {
 		route := new(Route)
-        err = routes.Scan(&route.routeID, &route.Name, &route.Waypoints)
+        err = routes.Scan(&route.RouteID, &route.Name, &route.Waypoints)
         if err != nil {
 			panic(err)
 		}
@@ -78,13 +79,13 @@ func GetDurationsByDate(from time.Time, till time.Time) map[int]map[string]int {
         panic(err)
     }
 	for durations.Next() {
-		dur := new(duration)
-        err := durations.Scan(&dur.durationID, &dur.routeID, &dur.duration, &dur.checkTime)
+		dur := new(Duration)
+        err := durations.Scan(&dur.DurationID, &dur.RouteID, &dur.Duration, &dur.CheckTime)
         if err != nil {
 			panic(err)
 		}
-        formattedCheckTime := formatTimeStamp(dur.checkTime)
-        addDuration(durationsMap, dur.routeID, formattedCheckTime, dur.duration)
+        formattedCheckTime := formatTimeStamp(dur.CheckTime)
+        addDuration(durationsMap, dur.RouteID, formattedCheckTime, dur.Duration)
     }
 
     return durationsMap
@@ -153,4 +154,17 @@ func GetRoutesByCharts() map[int][]int {
     }
     chartRouteMap := buildChartRoutesMap(routes)
     return chartRouteMap
+}
+
+// AddDuration add duration to db
+func AddDuration(dur Duration) {
+    stmt, err := db.Prepare("INSERT INTO durations(route_id, duration, check_time) VALUES($1,$2,$3)")
+    if err != nil {
+        panic(err)
+    }
+
+    _, err = stmt.Exec(dur.RouteID, dur.Duration, dur.CheckTime)
+    if err != nil {
+        panic(err)
+    }
 }
