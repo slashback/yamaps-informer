@@ -3,6 +3,28 @@ import datetime
 import psycopg2
 from pymongo import MongoClient
 from json import dumps
+from os import environ
+
+db_user = environ.get("PG_APP_USER")
+db_pass = environ.get("PG_APP_PASS")
+
+routes_id_mapping = {
+    "57b0dd1a604677252980af82": 1,
+    "57b19a9260467749fd1e3f2b": 2,
+    "57b19a9260467749fd1e3f2c": 3,
+    "57b19a9260467749fd1e3f2d": 4,
+    "57b19a9260467749fd1e3f2e": 5,
+    "57b19a9260467749fd1e3f2f": 6,
+    "57d1b97f6046777ca11bbc20": 7,
+    "5893736e75d3411b0b490fd3": 8,
+    "5893755075d3411b0b490fd5": 9,
+}
+
+charts_id_mapping = {
+    "57c42810adb6478b4130bbd5": 1,
+    "57c42b9badb6478b4130bbd7": 2,
+    "57d06a899b43f0d782091dec": 3,
+}
 
 
 def get_route_items():
@@ -10,6 +32,14 @@ def get_route_items():
     client = MongoClient('localhost')
     _db = client.routes
     collection = _db['routeItems']
+    cursor = collection.find({})
+    return cursor
+
+def get_chart_items():
+    """foo"""
+    client = MongoClient('localhost')
+    _db = client.routes
+    collection = _db['charts']
     cursor = collection.find({})
     return cursor
 
@@ -27,55 +57,88 @@ def get_durations_by_route_id(route_id):
     date_till = date_from_midnight + datetime.timedelta(days=1)
     query = {
         'route_id': route_id,
-        'timestamp': {
-            '$gt': date_from_midnight,
-            '$lt': date_till,
-        }
+        # 'timestamp': {
+        #     '$gt': date_from_midnight,
+        #     '$lt': date_till,
+        # }
     }
+    print("count: {}".format(collection.count(query)))
     cursor = collection.find(query)
     return cursor
 
-def add_route_item(route_item):
+def add_route_item(conn, route_item):
     """foo"""
-    conn = psycopg2.connect("dbname=routes host=localhost user=postgres password=postgres")
-    conn.autocommit = True
     cur = conn.cursor()
     query = """
-        INSERT INTO routes (name, description, waypoints) 
-        VALUES (%s, %s, %s) returning uid
+        INSERT INTO routes (uid, name, description, waypoints) 
+        VALUES (%s, %s, %s, %s) returning uid
     """
     waypoints = dumps(route_item["waypoints"])
-    params = (route_item['name'], route_item['description'], waypoints)
+    route_id = routes_id_mapping[str(route_item['_id'])]
+    params = (route_id, route_item['name'], route_item['description'], waypoints)
     cur.execute(query, params)
     uid, = cur.fetchone()
     cur.close()
-    conn.close()
     return uid
 
-def add_duration(duration_item, route_item_id):
+def add_duration(conn, duration_item, route_item_id):
     """foo"""
-    conn = psycopg2.connect("dbname=routes host=localhost user=postgres password=postgres")
-    conn.autocommit = True
+    if not route_item_id or duration_item['duration'] > 1000:
+        return
     cur = conn.cursor()
     query = """
         INSERT INTO durations (route_id, check_time, duration) 
         VALUES (%s, %s, %s)
     """
     params = (route_item_id, duration_item['timestamp'], duration_item['duration'])
+    try:
+        cur.execute(query, params)
+    except:
+        print(params)
+        raise
+    cur.close()
+
+def add_chart(conn, chart):
+    """foo"""
+    cur = conn.cursor()
+    query = """
+        INSERT INTO charts (uid, name) 
+        VALUES (%s, %s)
+    """
+    params = (charts_id_mapping[str(chart['_id'])], chart['name'])
     cur.execute(query, params)
     cur.close()
-    conn.close()
+
+
+def add_route_chart_relations(conn, chart):
+    """foo"""
+    for route_id in chart['routes']:
+        cur = conn.cursor()
+        query = """
+            INSERT INTO chart_routes (chart_id, route_id) 
+            VALUES (%s, %s)
+        """
+        params = (charts_id_mapping[str(chart['_id'])], routes_id_mapping[str(route_id)])
+        cur.execute(query, params)
+        cur.close()
 
 def migrate_mongo_to_pg():
     """foo"""
     route_items = get_route_items()
+    conn = psycopg2.connect("dbname=routes host=localhost user={} password={}".format(db_user, db_pass))
+    conn.autocommit = True
     for route_item in route_items:
         route_id = str(route_item['_id'])
         print('Migrating route_id: {}'.format(route_id))
-        inserted_routeid = add_route_item(route_item)
+        inserted_routeid = add_route_item(conn, route_item)
         durations = get_durations_by_route_id(route_id)
         for duration_item in durations:
-            add_duration(duration_item, inserted_routeid)
+            add_duration(conn, duration_item, inserted_routeid)
+    chart_items = get_chart_items()
+    for chart in chart_items:
+        add_chart(conn, chart)
+        add_route_chart_relations(conn, chart)
+    conn.close()
 
 if __name__ == '__main__':
     migrate_mongo_to_pg()

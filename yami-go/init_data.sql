@@ -1,6 +1,8 @@
-﻿/*drop table durations;
+drop table durations;
+drop table chart_routes;
 drop table routes;
 drop table charts;
+
 CREATE TABLE routes
     (
         uid serial primary key,
@@ -12,28 +14,29 @@ CREATE TABLE routes
 
 CREATE TABLE durations
     (
-        uid serial primary key,
+        uid bigserial primary key,
         route_id integer references routes(uid),
         duration integer NOT NULL,
         check_time timestamp
     )
     WITH (OIDS=FALSE);
-    */
+
 
     CREATE TABLE charts
     (
 	uid serial primary key,
 	name text
     );
-    insert into charts (name) values
-    ('Main Chart');
-
+ 
     CREATE TABLE chart_routes
     (
 	chart_id integer references charts(uid),
 	route_id integer references routes(uid)
     );
-    insert into chart_routes (chart_id, route_id) values 
+/*
+insert into charts (name) values ('Main Chart');
+    
+insert into chart_routes (chart_id, route_id) values 
     (1,1),
     (1,2),
     (1,3),
@@ -44,7 +47,7 @@ CREATE TABLE durations
     (1,8),
     (1,9);
 
-
+*/
   /*insert into routes (name, waypoints) values
   ('bor', array['51.33', '15.32']),
   ('yar', array['11.33', '12.32']);
