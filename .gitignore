@@ -2,3 +2,5 @@ __pycache__/
 dist/
 node_modules/
 .idea/
+yami-go/parse
+yami-go/serve
