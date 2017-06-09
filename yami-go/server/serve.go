@@ -70,38 +70,40 @@ func getDurationsByDate(from time.Time, till time.Time) chartList{
     return remapDurations(durationsMap, &timestamps, routes, routeCharts)
 }
 
-// debug function
-func handleGetCharts(daysShift int) {
+func handleGetCharts(daysShift int)  chartList{
     targetDay := getDateByDaysAgo(time.Now(), daysShift)
     timeFrom := getBeginningOfTheDay(targetDay)
     timeTill := getEndOfTheDay(targetDay)
     charts := getDurationsByDate(timeFrom, timeTill)
-    chartJSON, _ := json.Marshal(charts)
-    fmt.Sprintf(string(chartJSON))
+    return charts
 }
 
 func chartsHandler(w http.ResponseWriter, r *http.Request) {
+    start := time.Now()
     w.Header().Set("Content-Type", "application/json")
-    daysShift := 12
-    targetDay := getDateByDaysAgo(time.Now(), daysShift)
-    timeFrom := getBeginningOfTheDay(targetDay)
-    timeTill := getEndOfTheDay(targetDay)
-    charts := getDurationsByDate(timeFrom, timeTill)
+    fmt.Println(r.URL)
+    daysShift := 0
+    charts := handleGetCharts(daysShift)
     chartJSON, _ := json.Marshal(charts)
-    fmt.Println(string(chartJSON))
+    elapsed := time.Since(start)
+    fmt.Printf("took %s\n", elapsed)
     fmt.Fprintf(w, string(chartJSON))
 }
 
-func main() {
-    start := time.Now()
+func initDB() {
     dbUser := os.Getenv("PG_APP_USER")
     dbPass := os.Getenv("PG_APP_PASS")
     const dbName = "routes"
     dbinfo := fmt.Sprintf("postgres://%s:%s@localhost/%s", dbUser, dbPass, dbName)
     models.InitDB(dbinfo)
-    handleGetCharts(13) // for debug
+}
+
+func main() {
+    initDB()
+    start := time.Now()
+    _ = handleGetCharts(13) // for debug
     elapsed := time.Since(start)
-    fmt.Printf("took %s", elapsed)
+    fmt.Printf("took %s\n", elapsed)
     http.HandleFunc("/api/charts", chartsHandler)
     http.HandleFunc("/api/charts/0", chartsHandler)
     http.ListenAndServe(":8080", nil)
