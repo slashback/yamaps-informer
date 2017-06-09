@@ -6,6 +6,8 @@ import (
     "time"
     "net/http"
     "encoding/json"
+    "regexp"
+    "strconv"
     "../models"
 )
 
@@ -81,8 +83,13 @@ func handleGetCharts(daysShift int)  chartList{
 func chartsHandler(w http.ResponseWriter, r *http.Request) {
     start := time.Now()
     w.Header().Set("Content-Type", "application/json")
-    fmt.Println(r.URL)
-    daysShift := 0
+    daysShiftRegex := regexp.MustCompile(`\d+$`)
+    match := daysShiftRegex.FindStringSubmatch(r.RequestURI)[0]
+    daysShift, err := strconv.Atoi(match)
+    if err != nil {
+        fmt.Println(err)
+        daysShift = 0
+    }
     charts := handleGetCharts(daysShift)
     chartJSON, _ := json.Marshal(charts)
     elapsed := time.Since(start)
@@ -100,11 +107,10 @@ func initDB() {
 
 func main() {
     initDB()
-    start := time.Now()
-    _ = handleGetCharts(13) // for debug
-    elapsed := time.Since(start)
-    fmt.Printf("took %s\n", elapsed)
-    http.HandleFunc("/api/charts", chartsHandler)
-    http.HandleFunc("/api/charts/0", chartsHandler)
+    // start := time.Now()
+    // _ = handleGetCharts(13) // for debug
+    // elapsed := time.Since(start)
+    // fmt.Printf("took %s\n", elapsed)
+    http.HandleFunc("/api/charts/", chartsHandler)
     http.ListenAndServe(":8080", nil)
 }
