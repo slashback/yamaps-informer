@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"time"
+	"log"
 	"../models"
 )
 
@@ -49,8 +50,12 @@ func getDuration(waypoints string) int {
 func main() {
 	dbUser := os.Getenv("PG_APP_USER")
     dbPass := os.Getenv("PG_APP_PASS")
+	if dbUser == "" || dbPass == "" {
+		log.Println("Provide db user and password through PG_APP_USER and PG_APP_PASS environ variables")
+		return
+	}
     const dbName = "routes"
-    dbinfo := fmt.Sprintf("postgres://%s:%s@localhost/%s", dbUser, dbPass, dbName)
+    dbinfo := fmt.Sprintf("postgres://%s:%s@localhost/%s?sslmode=disable", dbUser, dbPass, dbName)
     models.InitDB(dbinfo)
 	routesList := models.GetRoutes()
 	checkTime := time.Now()
