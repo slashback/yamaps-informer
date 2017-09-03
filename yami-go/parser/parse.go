@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"fmt"
+        "log"
 	"bytes"
 	"encoding/json"
 	"strconv"
@@ -59,6 +60,6 @@ func main() {
 		duration := getDuration(route.Waypoints)
 		durationItem := models.Duration{RouteID: route.RouteID, CheckTime: checkTime, Duration: duration}
 		models.AddDuration(durationItem)
-		fmt.Printf("Route %s: %d\n", route.Name, duration)
+		log.Printf("Route %s: %d\n", route.Name, duration)
 	}
 }
