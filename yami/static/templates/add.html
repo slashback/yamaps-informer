@@ -121,6 +121,7 @@ ymaps.ready(init);
           description: routeDescription,
           waypoints: coordinates
         })
+        console.log(routeData)
         $.ajax({
            url: "/route",
            type: "POST",//type of posting the data
