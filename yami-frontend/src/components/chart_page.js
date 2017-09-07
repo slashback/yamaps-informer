@@ -24,6 +24,7 @@ class ChartPage extends Component {
      }
 
   render() {
+    // eslint-disable-next-line
     const testData = [
       {
         name: 'Work',
