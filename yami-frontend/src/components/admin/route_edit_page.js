@@ -1,17 +1,31 @@
 import React from 'react'
 
+const isArraysEqual = (a, b) => {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (a.length !== b.length) return false;
+    for (var i = 0; i < a.length; ++i) {
+        if (a[i] !== b[i]) return false;
+    }
+    return true;
+}
+
 class RouteEditPage extends React.Component {
     constructor(props) {
         super(props)
+        this.initMap = this.initMap.bind(this)
+        this.onChangeName = this.onChangeName.bind(this)
+        this.onChangeDescription = this.onChangeDescription.bind(this)
+        this.onSave = this.onSave.bind(this)
         this.state = {
             name: "",
             description: "",
-            waypoints: [],
+            waypoints: ["Москва", [55.85291424814013, 37.68412805566206]],
+            yamapsInstance: ymaps // eslint-disable-line
         }
     }
 
     componentWillMount() {
-        console.log('PROPS', this.props)
         const route = this.props.location.route
         if (route === undefined) {
             // api call
@@ -24,141 +38,153 @@ class RouteEditPage extends React.Component {
         }
     }
 
+    shouldComponentUpdate(nextProps, nextState) {
+        return (
+            nextState.name !== this.state.name ||
+            nextState.description !== this.state.description
+        )
+    }
+
+    onChangeName(value) {
+        this.setState({
+            name: value
+        })
+    }
+
+    onChangeDescription(value) {
+        this.setState({
+            description: value
+        })
+    }
+
+    onSave() {
+        const data = {
+            name: this.state.name,
+            description: this.state.description,
+            waypoints: this.state.waypoints
+        }
+        const routeId = this.props.match.params.routeId
+        console.log('API CALL', data, routeId)
+    }
+
+    initMap(initWaypoints) {
+        var multiRoute = new this.state.yamapsInstance.multiRouter.MultiRoute({
+            referencePoints: initWaypoints
+        }, {
+            editorMidPointsType: "via",
+            editorDrawOver: false
+        });
+        var myMap = new this.state.yamapsInstance.Map('map', {
+            center: [
+                55.832824252908594,
+                37.6491091347636
+            ],
+            zoom: 11,
+            controls: []
+        }, {
+            buttonMaxWidth: 300
+        });
+        
+        multiRoute.editor.start()
+        myMap.geoObjects.add(multiRoute);
+        
+        var self = this
+        multiRoute.events.add("update",function () {
+            const coordinates = []
+            var wayPoints = multiRoute.getWayPoints();
+            var viaPoints = multiRoute.getViaPoints();
+            coordinates.push(wayPoints.get(0).geometry.getCoordinates())
+            viaPoints.each(function (point){
+                coordinates.push(point.geometry.getCoordinates())
+            })
+            coordinates.push(wayPoints.get(1).geometry.getCoordinates())
+            if (!isArraysEqual(coordinates, self.state.waypoints)) {
+                self.setState({
+                    waypoints: coordinates
+                })
+            }
+        });
+    }
+
     render() {
-        return (<h1>Hello</h1>);
-    }
-}
-
-
-// eslint-disable-next-line
-const yam = ymaps
-
-var coordinates = []
-const init = (initWaypoints) => {
-    console.log('INIT', initWaypoints)
-    var multiRoute = new yam.multiRouter.MultiRoute({
-        referencePoints: initWaypoints
-    }, {
-        editorMidPointsType: "via",
-        editorDrawOver: false
-    });
-    var myMap = new yam.Map('map', {
-        center: [
-        55.832824252908594,
-        37.6491091347636
-        ],
-        zoom: 11,
-        controls: []
-    }, {
-        buttonMaxWidth: 300
-    });
-    
-    multiRoute.editor.start()
-    myMap.geoObjects.add(multiRoute);
-
-    multiRoute.events.add("update",function () {
-      coordinates = []
-      var wayPoints = multiRoute.getWayPoints();
-      var viaPoints = multiRoute.getViaPoints();
-      coordinates.push(wayPoints.get(0).geometry.getCoordinates())
-      viaPoints.each(function (point){
-        console.log('__', point.geometry.getCoordinates())
-        coordinates.push(point.geometry.getCoordinates())
-      })
-      coordinates.push(wayPoints.get(1).geometry.getCoordinates())
-      console.log(coordinates)
-    });
-}
-
-const change = () => {
-
-    var routeName = document.getElementById('name').value;
-    var routeDescription = document.getElementById('description').value;
-    if( routeName.length === 0 ){
-        alert('Нужно ввести хотя бы название маршрута');
-    return;
-    }
-
-    console.log(coordinates)
-    const routeData = JSON.stringify({
-        name: routeName,
-        description: routeDescription,
-        waypoints: coordinates
-    })
-    console.log(routeData)
-    // $.ajax({
-    //     url: "/route",
-    //     type: "POST",//type of posting the data
-    //     data: {
-    //         routeData
-    //     },
-    //     success: function (data) {
-    //         console.log('OK')
-    //         //what to do in success
-    //     },
-    //     error: function(xhr, ajaxOptions, thrownError){
-    //         console.log('NOT')
-    //     },
-    //     timeout : 15000//timeout of the ajax call
-    // });
-}
-
-
-
-const RouteEditPage1 = (params) => {
-    console.log(params)
-    const route = params.location.route
-    console.log(route)
-    let waypoints = route.waypoints
-    if (waypoints === undefined) {
-        const defaultWaypoints = ["Москва", [55.85291424814013, 37.68412805566206]]
-        waypoints = defaultWaypoints
-    }
-    yam.ready(() => { init(waypoints) })
-    return (
-        <div>
-            <div
-                id="control-form"
-                style={{
-                    position: "fixed",
-                    right: "40px",
-                    top: "40px",
-                    width: "300px",
-                    height: "200px",
-                    zIndex: "1",
-                    backgroundColor: "#546e7a",
-                }}
-            >
-                <div className="card blue-grey darken-1">
-                        <div className="card-content white-text">
-                        <span className="card-title">Новый маршрут</span>
-                        <p>Можно двигать точки начала и конца и добавлять промежуточные точки (нужно потянуть за линию маршрута)</p>
-                        <input placeholder="Название" id="name" type="text"/>
-                        <input placeholder="Описание" id="description" type="text"/>
-                        <a className="waves-effect waves-light btn" onClick={change}>Сохранить</a>
-                        </div>
-                </div>
-            </div>
+        this.state.yamapsInstance.ready(() => { this.initMap(this.state.waypoints) })
+        return (
+            <div>
                 <div
-                    id="page"
+                    id="control-form"
                     style={{
-                        position: "absolute",
-                        right: "0px",
-                        top: "0px",
-                        left: "0px",
-                        bottom: "0px",
+                        position: "fixed",
+                        right: "40px",
+                        top: "40px",
+                        width: "300px",
+                        height: "200px",
+                        zIndex: "1",
+                        backgroundColor: "#546e7a",
+                        color: "white",
+                        padding: "10px",
+                        fontSize: "small",
+                        display: "flex",
+                        flexDirection: "column"
                     }}
                 >
-                <div 
-                    id="map"
-                    style={{
-                        width:"100%", 
-                        height:"100%"
-                    }}></div>
-
+                    <span className="card-title">Новый маршрут</span>
+                    <p>Можно двигать точки начала и конца и добавлять промежуточные точки (нужно потянуть за линию маршрута)</p>
+                    <input
+                        placeholder="Название" 
+                        id="name" 
+                        type="text" 
+                        value={this.state.name}
+                        onChange={(e) => this.onChangeName(e.target.value)}
+                        style={{
+                            margin: "5px 0",
+                            height: "30px",
+                        }}
+                    />
+                    <input 
+                        placeholder="Описание" 
+                        id="description" 
+                        type="text" 
+                        value={this.state.description}
+                        onChange={(e) => this.onChangeDescription(e.target.value)}
+                        style={{
+                            margin: "5px 0",
+                            height: "30px",
+                        }}
+                    />
+                    <a
+                        onClick={this.onSave}
+                        style={{
+                            cursor: "pointer",
+                            alignSelf: "center",
+                            fontSize: "larger",
+                            borderBottom: "1px solid",
+                            margin: "7px 0"
+                        }}
+                    >
+                        Сохранить
+                    </a>
                 </div>
-        </div>
-    )
+                    <div
+                        id="page"
+                        style={{
+                            position: "absolute",
+                            right: "0px",
+                            top: "0px",
+                            left: "0px",
+                            bottom: "0px",
+                        }}
+                    >
+                    <div 
+                        id="map"
+                        style={{
+                            width:"100%", 
+                            height:"100%"
+                        }}></div>
+
+                    </div>
+            </div>
+        )
+    }
 }
 
 export default RouteEditPage
