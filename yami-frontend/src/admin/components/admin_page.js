@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { connect } from 'react-redux'
-import { apiGetRoutes, apiGetCharts } from './actions'
+import { apiGetRoutes, apiGetCharts } from '../actions'
 
 const prepareChartData = (charts, routes) => {
     return charts.map(chart => {

@@ -9,9 +9,9 @@ import { Provider } from 'react-redux'
 import thunkMiddleware from 'redux-thunk'
 import './App.css';
 import ChartPage from './components/chart_page'
-import AdminPage from './components/admin/admin_page'
-import RouteEditPage from './components/admin/route_edit_page'
-import adminReducer from './components/admin/reducers'
+import AdminPage from './admin/components/admin_page'
+import RouteEditPage from './admin/components/route_edit_page'
+import adminReducer from './admin/reducers'
 
 const logger = store => next => action => {
   console.group(action.type)
