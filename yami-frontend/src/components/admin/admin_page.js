@@ -1,5 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { connect } from 'react-redux'
+import { apiGetRoutes, apiGetCharts } from './actions'
 
 const prepareChartData = (charts, routes) => {
     return charts.map(chart => {
@@ -12,46 +14,19 @@ const prepareChartData = (charts, routes) => {
     })
 }
 
-export const AdminPage = () => {
-    const apiGetCharts = [
-        {
-            uid: '1',
-            name: 'Домой',
-            description: 'Дорога метро-дом',
-            routes: ["1", "2"],
-        },
-        {
-            uid: '2',
-            name: 'На работу',
-            description: 'От дома до офиса',
-            routes: ["2", "3"]
-        }
-    ]
-    const apiGetRoutes = [
-        {
-            uid: '1',
-            name: 'МКАД',
-            waypoints: [
-                [55.91946385714214,37.71413931710397],[55.891622999999996,37.70677499999999],[55.87369399999999,37.742697],[55.84346099999999,37.801407],[55.819486,37.83768599999999],[55.81003499999997,37.78924499999999],[55.79966999999997,37.73609599999999],[55.795604999999966,37.71252199999999],[55.79274595287293,37.70794607171351]
-            ]
-        },
-        {
-            uid: '2',
-            name: 'Через центр',
-            waypoints: [
-                [55.91946385714214,37.71413931710397],[55.891622999999996,37.70677499999999]
-            ]
-        },
-        {
-            uid: '3',
-            name: 'Щелковское ш.',
-            waypoints: [
-                [55.87369399999999,37.742697],[55.84346099999999,37.801407],[55.819486,37.83768599999999],[55.81003499999997,37.78924499999999],[55.79966999999997,37.73609599999999],[55.795604999999966,37.71252199999999]
-            ]
-        }
-    ]
-    const charts = prepareChartData(apiGetCharts, apiGetRoutes)
-    const routes = apiGetRoutes
+class AdminPage extends React.Component {
+    constructor(props) {
+        super(props)
+    }
+
+    componentWillMount() {
+        this.props.initCharts()
+        this.props.initRoutes()
+    }
+
+    render() {
+        const charts = prepareChartData(this.props.charts, this.props.routes)
+        const routes = this.props.routes
     return (
         <div
             style={{
@@ -140,8 +115,6 @@ export const AdminPage = () => {
                                                     </li>
                                                 )
                                             })}
-                                            
-                                            
                                         </ul>
                                     </div>
                                 </li>
@@ -204,8 +177,6 @@ export const AdminPage = () => {
                                                 to={routeEditUrl}>
                                                 Edit
                                             </Link>
-                                            
-
                                         </span>
                                     </div>
                                     
@@ -216,7 +187,30 @@ export const AdminPage = () => {
                 </div>
             </div>
         </div>
-    )
+    ) 
+    }
+
 }
 
-export default AdminPage
+const mapStateToProps = (state) => {
+  return {
+    routes: state.routes,
+    charts: state.charts,
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    initRoutes: () => {
+      dispatch(apiGetRoutes())
+    },
+    initCharts: () => {
+      dispatch(apiGetCharts())
+    },
+  }
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(AdminPage)
