@@ -1,19 +1,27 @@
 import React, { Component } from 'react';
-import { Router, Route, browserHistory } from 'react-router'
+import {
+  BrowserRouter as Router,
+  Route,
+  Switch
+} from 'react-router-dom'
 import './App.css';
 import ChartPage from './components/chart_page'
 import AdminPage from './components/admin/admin_page'
+import RouteEditPage from './components/admin/route_edit_page'
 
 class App extends Component {
   render() {
     return (
-      <div className="App">
-        <Router history={browserHistory}>
-            <Route path="/" component={ChartPage} />
-            <Route path="/skip/:daysAgo" component={ChartPage} />
+      <Router>
+        <div className="App">
+          <Switch>
+            <Route path="/skip/" component={ChartPage} />
+            <Route path="/admin/route/:routeId" component={RouteEditPage} />
             <Route path="/admin" component={AdminPage} />
-          </Router>
-      </div>
+            <Route path="/" component={ChartPage} />
+          </Switch>
+        </div>
+      </Router>
     );
   }
 }
