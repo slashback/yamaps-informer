@@ -1,4 +1,6 @@
 import React from 'react'
+import { connect } from 'react-redux'
+import { apiSaveRoute } from '../actions'
 
 const isArraysEqual = (a, b) => {
     if (a === b) return true;
@@ -61,10 +63,11 @@ class RouteEditPage extends React.Component {
         const data = {
             name: this.state.name,
             description: this.state.description,
-            waypoints: this.state.waypoints
+            waypoints: this.state.waypoints,
+            uid: this.props.match.params.routeId
         }
         const routeId = this.props.match.params.routeId
-        console.log('API CALL', data, routeId)
+        this.props.onSaveRoute(data)
     }
 
     initMap(initWaypoints) {
@@ -187,4 +190,21 @@ class RouteEditPage extends React.Component {
     }
 }
 
-export default RouteEditPage
+const mapStateToProps = (state) => {
+  return {
+    routes: state.routes,
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    onSaveRoute: (route) => {
+      dispatch(apiSaveRoute(route))
+    },
+  }
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(RouteEditPage)
