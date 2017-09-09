@@ -1,3 +1,7 @@
+import { Redirect } from 'react-router'
+import React from 'react'
+import history from '../history'
+
 const routeDataMock = [
     {
         uid: '1',
@@ -45,6 +49,14 @@ export const receiveRoutes = (routes) => {
     }
 }
 
+export const RECEIVE_ROUTE = "RECEIVE_ROUTE"
+export const editRoute = (route) => {
+    return {
+        type: RECEIVE_ROUTE,
+        payload: route
+    }
+}
+
 export const RECEIVE_CHARTS = "RECEIVE_CHARTS"
 export const receiveCharts = (charts) => {
     return {
@@ -62,5 +74,13 @@ export const apiGetRoutes = () => {
 export const apiGetCharts = () => {
     return function (dispatch, getState) {
         dispatch(receiveCharts(chartDataMock))
+    }
+}
+
+export const apiSaveRoute = (route) => {
+    return function(dispatch, getState) {
+        console.log('API CALL', route)
+        dispatch(editRoute(route))
+        history.push('/admin')
     }
 }
