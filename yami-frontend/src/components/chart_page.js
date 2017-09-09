@@ -14,13 +14,13 @@ class ChartPage extends Component {
      componentDidMount() {
          var self = this
          const daysAgo = 0
-         const chartsUrl = `/api/charts/${daysAgo}`
+         const chartsUrl = `/api/formatted_charts/${daysAgo}`
          request.get(chartsUrl).end(function(err, res){
            const chartList = res.body.chart_list
            self.setState({
              charts: chartList
            })
-        });
+        })
      }
 
   render() {

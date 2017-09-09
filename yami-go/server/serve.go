@@ -111,6 +111,6 @@ func main() {
     // _ = handleGetCharts(13) // for debug
     // elapsed := time.Since(start)
     // fmt.Printf("took %s\n", elapsed)
-    http.HandleFunc("/api/charts/", chartsHandler)
+    http.HandleFunc("/api/formatted_charts/", chartsHandler)
     http.ListenAndServe(":8080", nil)
 }
