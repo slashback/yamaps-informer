@@ -1,6 +1,7 @@
-import { Redirect } from 'react-router'
-import React from 'react'
+// import { Redirect } from 'react-router'
+// import React from 'react'
 import history from '../history'
+import 'whatwg-fetch'
 
 const routeDataMock = [
     {
@@ -65,22 +66,72 @@ export const receiveCharts = (charts) => {
     }
 }
 
-export const apiGetRoutes = () => {
-    return function (dispatch, getState) {
-        dispatch(receiveRoutes(routeDataMock))
+const apiGet = (url) => {
+    return fetch(url).then(function(response) {
+        return response.json()
+    }).then(function(json) {
+        return json
+    })
+}
+
+const apiPost = (url, data) => {
+    return fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+}
+
+const prepareGetChart = (chart) => {
+    return {
+        ...chart,
+        routes: JSON.parse(chart.routes),
     }
 }
 
-export const apiGetCharts = () => {
-    return function (dispatch, getState) {
-        dispatch(receiveCharts(chartDataMock))
+const prepareGetRoute = (route) => {
+    return {
+        ...route,
+        waypoints: JSON.parse(route.waypoints),
     }
+}
+
+const prepareSaveRoute = (route) => {
+    return {
+        ...route,
+        uid: parseInt(route.uid, 10),
+        waypoints: JSON.stringify(route.waypoints),
+    }
+}
+
+export const apiGetRoutes = () => {
+    return function (dispatch, getState) {
+            apiGet('/api/routes').then(function(rawRoutes) {
+                const routes = rawRoutes.map(prepareGetRoute, rawRoutes)
+                dispatch(receiveRoutes(routes))
+        })
+     }
+}
+
+export const apiGetCharts = () => {
+        return function (dispatch, getState) {
+            apiGet('/api/charts').then(function(rawCharts) {
+                const charts = rawCharts.map(prepareGetChart, rawCharts)
+                dispatch(receiveCharts(charts))
+        })
+     }
 }
 
 export const apiSaveRoute = (route) => {
     return function(dispatch, getState) {
-        console.log('API CALL', route)
-        dispatch(editRoute(route))
-        history.push('/admin')
+        console.log('API CALL', prepareSaveRoute(route))
+        const url = `/api/route/${route.uid}`
+        apiPost(url, prepareSaveRoute(route)).then(function (response) {
+            // TODO: ok or err
+            dispatch(editRoute(route))
+            history.push('/admin')
+        })   
     }
 }

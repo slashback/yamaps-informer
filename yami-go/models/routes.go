@@ -6,9 +6,18 @@ import (
 
 // Route route
 type Route struct {
-    RouteID int
-    Name string
-    Waypoints string
+    RouteID int         `json:"uid"`
+    Name string         `json:"name"`
+    Description string  `json:"description"`
+    Waypoints string    `json:"waypoints"`
+}
+
+//Chart chart
+type Chart struct {
+    Uid int             `json:"uid"`
+    Name string         `json:"name"`
+    Description string  `json:"description"`
+    Routes string       `json:"routes"`
 }
 
 // Duration represents duration item in db
@@ -56,6 +65,30 @@ func GetRoutes() []*Route {
         routesList = append(routesList, route)
     }
     return routesList
+}
+
+func GetCharts() []*Chart {
+    chartList := make([]*Chart, 0)
+    charts, err := db.Query(`
+        select c.uid, c.name, array_to_json(array_agg(cr.route_id)) 
+        from charts c 
+        join chart_routes cr on c.uid = cr.chart_id 
+        group by c.uid, c.name  
+    `)
+	defer charts.Close()
+	if err != nil {
+        panic(err)
+    }
+
+    for charts.Next() {
+		chart := new(Chart)
+        err = charts.Scan(&chart.Uid, &chart.Name, &chart.Routes)
+        if err != nil {
+			panic(err)
+		}
+        chartList = append(chartList, chart)
+    }
+    return chartList
 }
 
 func addDuration(storage map[int]map[string]int, routeID int, checkTime string, duration int) {
@@ -164,6 +197,22 @@ func AddDuration(dur Duration) {
     }
 
     _, err = stmt.Exec(dur.RouteID, dur.Duration, dur.CheckTime)
+    if err != nil {
+        panic(err)
+    }
+}
+
+// UpdateRoute updates route
+func AddRoute(route Route) {
+    stmt, err:= db.Prepare(`
+        UPDATE routes
+        SET name=$1, waypoints=$2 
+        WHERE uid=$3
+    `)
+    if err != nil {
+        panic(err)
+    }
+    _, err = stmt.Exec(route.Name, route.Waypoints, route.RouteID)
     if err != nil {
         panic(err)
     }

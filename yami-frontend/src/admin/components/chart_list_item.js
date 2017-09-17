@@ -50,6 +50,9 @@ export const ChartListItem = (props) => {
             </div>
             <ul className="chart-routes-list">
                 {chart.routes.map(route => {
+                    if (route === undefined) {
+                        return ("")
+                    }
                     return (
                         <li
                             className="chart-routes-list-item"

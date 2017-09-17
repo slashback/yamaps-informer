@@ -66,7 +66,7 @@ class RouteEditPage extends React.Component {
             waypoints: this.state.waypoints,
             uid: this.props.match.params.routeId
         }
-        const routeId = this.props.match.params.routeId
+        // const routeId = this.props.match.params.routeId
         this.props.onSaveRoute(data)
     }
 

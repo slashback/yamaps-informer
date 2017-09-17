@@ -97,11 +97,44 @@ func chartsHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, string(chartJSON))
 }
 
+func chartListHandler(w http.ResponseWriter, r *http.Request) {
+    charts := models.GetCharts()
+    chartJSON, _ := json.Marshal(charts)
+    fmt.Fprintf(w, string(chartJSON))
+}
+
+func routeListHandler(w http.ResponseWriter, r *http.Request) {
+    routes := models.GetRoutes()
+    routesJSON, _ := json.Marshal(routes)
+    fmt.Fprintf(w, string(routesJSON))
+}
+
+func routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
+    routeIDregex := regexp.MustCompile(`\d+$`)
+    match := routeIDregex.FindStringSubmatch(r.RequestURI)[0]
+    routeID, err := strconv.Atoi(match)
+    // TODO: add or update
+    fmt.Println(routeID)
+    if err != nil {
+        fmt.Println(err)
+        fmt.Fprintf(w, "Err")
+    }
+    decoder := json.NewDecoder(r.Body)
+
+	var route models.Route
+	err = decoder.Decode(&route)
+
+	if err != nil {
+		panic(err)
+	}
+    models.AddRoute(route)
+}
+
 func initDB() {
     dbUser := os.Getenv("PG_APP_USER")
     dbPass := os.Getenv("PG_APP_PASS")
     const dbName = "routes"
-    dbinfo := fmt.Sprintf("postgres://%s:%s@localhost/%s", dbUser, dbPass, dbName)
+    dbinfo := fmt.Sprintf("postgres://%s:%s@localhost/%s?sslmode=disable", dbUser, dbPass, dbName)
     models.InitDB(dbinfo)
 }
 
@@ -112,5 +145,8 @@ func main() {
     // elapsed := time.Since(start)
     // fmt.Printf("took %s\n", elapsed)
     http.HandleFunc("/api/formatted_charts/", chartsHandler)
+    http.HandleFunc("/api/charts/", chartListHandler)
+    http.HandleFunc("/api/routes/", routeListHandler)
+    http.HandleFunc("/api/route/", routeUpdateHandler)
     http.ListenAndServe(":8080", nil)
 }

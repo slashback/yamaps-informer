@@ -18,6 +18,7 @@ const ChartList = (props) => {
             <div className="charts-content">
                 <ul className="chart_list">
                     {charts.map(chart => {
+                        console.log('CHARTTTTTTTTTTT', chart)
                         return (
                             <ChartListItem 
                                 chart={chart} 
