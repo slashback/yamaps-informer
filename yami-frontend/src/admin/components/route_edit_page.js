@@ -38,13 +38,8 @@ class RouteEditPage extends React.Component {
                 waypoints: route.waypoints,
             })
         }
-    }
-
-    shouldComponentUpdate(nextProps, nextState) {
-        return (
-            nextState.name !== this.state.name ||
-            nextState.description !== this.state.description
-        )
+        this.state.yamapsInstance.ready(() => { this.initMap(this.state.waypoints) })
+        
     }
 
     onChangeName(value) {
@@ -110,7 +105,6 @@ class RouteEditPage extends React.Component {
     }
 
     render() {
-        this.state.yamapsInstance.ready(() => { this.initMap(this.state.waypoints) })
         return (
             <div>
                 <div
