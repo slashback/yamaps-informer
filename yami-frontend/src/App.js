@@ -12,6 +12,7 @@ import './App.css';
 import ChartPage from './components/chart_page'
 import AdminPage from './admin/components/admin_page'
 import RouteEditPage from './admin/components/route_edit_page'
+import LoginPage from './auth/components/login_page'
 import adminReducer from './admin/reducers'
 
 const logger = store => next => action => {
@@ -41,6 +42,7 @@ class App extends Component {
               <Route path="/skip/" component={ChartPage} />
               <Route path="/admin/route/:routeId" component={RouteEditPage} />
               <Route path="/admin" component={AdminPage} />
+              <Route path="/auth" component={LoginPage} />
               <Route path="/" component={ChartPage} />
             </Switch>
           </div>

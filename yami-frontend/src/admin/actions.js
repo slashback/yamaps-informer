@@ -1,5 +1,3 @@
-// import { Redirect } from 'react-router'
-// import React from 'react'
 import history from '../history'
 import 'whatwg-fetch'
 

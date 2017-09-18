@@ -26,6 +26,10 @@ type chartList struct {
     ChartList []chart   `json:"chart_list"`
 }
 
+type AuthData struct {
+    Password string    `json:"password"`
+}
+
 func getBeginningOfTheDay(timestamp time.Time) time.Time {
     year, month, day := timestamp.Date()
     return time.Date(year, month, day, 0, 0, 0, 0, timestamp.Location())
@@ -130,6 +134,22 @@ func routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
     models.AddRoute(route)
 }
 
+func authHandler(w http.ResponseWriter, r *http.Request) {
+    decoder := json.NewDecoder(r.Body)
+	var authData AuthData
+	err := decoder.Decode(&authData)
+	if err != nil {
+		panic(err)
+	}
+    if (authData.Password == "qwe") {
+        fmt.Fprintf(w, "wabwabwab")
+    } else {
+        w.WriteHeader(http.StatusUnauthorized)
+        w.Write([]byte("Auth failed"))
+    }
+}
+
+
 func initDB() {
     dbUser := os.Getenv("PG_APP_USER")
     dbPass := os.Getenv("PG_APP_PASS")
@@ -148,5 +168,6 @@ func main() {
     http.HandleFunc("/api/charts/", chartListHandler)
     http.HandleFunc("/api/routes/", routeListHandler)
     http.HandleFunc("/api/route/", routeUpdateHandler)
+    http.HandleFunc("/api/auth/", authHandler)
     http.ListenAndServe(":8080", nil)
 }
