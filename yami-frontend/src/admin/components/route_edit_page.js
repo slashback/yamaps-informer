@@ -1,6 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { apiSaveRoute } from '../actions'
+import NeedAuth from '../../auth/components/need_auth'
 
 const isArraysEqual = (a, b) => {
     if (a === b) return true;
@@ -106,80 +107,82 @@ class RouteEditPage extends React.Component {
 
     render() {
         return (
-            <div>
-                <div
-                    id="control-form"
-                    style={{
-                        position: "fixed",
-                        right: "40px",
-                        top: "40px",
-                        width: "300px",
-                        height: "200px",
-                        zIndex: "1",
-                        backgroundColor: "#546e7a",
-                        color: "white",
-                        padding: "10px",
-                        fontSize: "small",
-                        display: "flex",
-                        flexDirection: "column"
-                    }}
-                >
-                    <span className="card-title">Новый маршрут</span>
-                    <p>Можно двигать точки начала и конца и добавлять промежуточные точки (нужно потянуть за линию маршрута)</p>
-                    <input
-                        placeholder="Название" 
-                        id="name" 
-                        type="text" 
-                        value={this.state.name}
-                        onChange={(e) => this.onChangeName(e.target.value)}
-                        style={{
-                            margin: "5px 0",
-                            height: "30px",
-                        }}
-                    />
-                    <input 
-                        placeholder="Описание" 
-                        id="description" 
-                        type="text" 
-                        value={this.state.description}
-                        onChange={(e) => this.onChangeDescription(e.target.value)}
-                        style={{
-                            margin: "5px 0",
-                            height: "30px",
-                        }}
-                    />
-                    <a
-                        onClick={this.onSave}
-                        style={{
-                            cursor: "pointer",
-                            alignSelf: "center",
-                            fontSize: "larger",
-                            borderBottom: "1px solid",
-                            margin: "7px 0"
-                        }}
-                    >
-                        Сохранить
-                    </a>
-                </div>
+            <NeedAuth>
+                <div>
                     <div
-                        id="page"
+                        id="control-form"
                         style={{
-                            position: "absolute",
-                            right: "0px",
-                            top: "0px",
-                            left: "0px",
-                            bottom: "0px",
+                            position: "fixed",
+                            right: "40px",
+                            top: "40px",
+                            width: "300px",
+                            height: "200px",
+                            zIndex: "1",
+                            backgroundColor: "#546e7a",
+                            color: "white",
+                            padding: "10px",
+                            fontSize: "small",
+                            display: "flex",
+                            flexDirection: "column"
                         }}
                     >
-                    <div 
-                        id="map"
-                        style={{
-                            width:"100%", 
-                            height:"100%"
-                        }}></div>
-
+                        <span className="card-title">Новый маршрут</span>
+                        <p>Можно двигать точки начала и конца и добавлять промежуточные точки (нужно потянуть за линию маршрута)</p>
+                        <input
+                            placeholder="Название" 
+                            id="name" 
+                            type="text" 
+                            value={this.state.name}
+                            onChange={(e) => this.onChangeName(e.target.value)}
+                            style={{
+                                margin: "5px 0",
+                                height: "30px",
+                            }}
+                        />
+                        <input 
+                            placeholder="Описание" 
+                            id="description" 
+                            type="text" 
+                            value={this.state.description}
+                            onChange={(e) => this.onChangeDescription(e.target.value)}
+                            style={{
+                                margin: "5px 0",
+                                height: "30px",
+                            }}
+                        />
+                        <a
+                            onClick={this.onSave}
+                            style={{
+                                cursor: "pointer",
+                                alignSelf: "center",
+                                fontSize: "larger",
+                                borderBottom: "1px solid",
+                                margin: "7px 0"
+                            }}
+                        >
+                            Сохранить
+                        </a>
                     </div>
-            </div>
+                        <div
+                            id="page"
+                            style={{
+                                position: "absolute",
+                                right: "0px",
+                                top: "0px",
+                                left: "0px",
+                                bottom: "0px",
+                            }}
+                        >
+                        <div 
+                            id="map"
+                            style={{
+                                width:"100%", 
+                                height:"100%"
+                            }}></div>
+
+                        </div>
+                </div>
+            </NeedAuth>
         )
     }
 }

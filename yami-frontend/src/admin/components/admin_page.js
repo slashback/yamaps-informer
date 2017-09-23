@@ -1,5 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
+import NeedAuth from '../../auth/components/need_auth'
 import ChartList from './chart_list'
 import RouteList from './route_list'
 import { apiGetRoutes, apiGetCharts } from '../actions'
@@ -27,15 +28,17 @@ class AdminPage extends React.Component {
         console.log("PREPARE CH", charts)
         console.log('PREPARE ROU', routes)
     return (
-        <div
-            style={{
-                display: "flex",
-                margin: "10px",
-            }}
-        >
-            <ChartList charts={charts} />
-            <RouteList routes={routes} />
-        </div>
+        <NeedAuth>
+            <div
+                style={{
+                    display: "flex",
+                    margin: "10px",
+                }}
+            >
+                <ChartList charts={charts} />
+                <RouteList routes={routes} />
+            </div>
+        </NeedAuth>
     ) 
     }
 
