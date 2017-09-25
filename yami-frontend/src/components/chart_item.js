@@ -25,9 +25,16 @@ class ChartItem extends Component {
 
     const datasets = chartItem.data.map(function(item) {
       const color = colors.pop();
+      const values_new = item.values.map(item => {
+          if (item === 0) {
+              return null
+          } else {
+              return item
+          }
+      })
       return {
         label: item.name,
-        data: item.values,
+        data: values_new,
         fill: false,
         lineTension: 0.1,
         backgroundColor: color[0],
