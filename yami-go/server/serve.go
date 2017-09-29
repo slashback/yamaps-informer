@@ -114,24 +114,28 @@ func routeListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
-    routeIDregex := regexp.MustCompile(`\d+$`)
-    match := routeIDregex.FindStringSubmatch(r.RequestURI)[0]
-    routeID, err := strconv.Atoi(match)
-    // TODO: add or update
-    fmt.Println(routeID)
-    if err != nil {
-        fmt.Println(err)
-        fmt.Fprintf(w, "Err")
-    }
+    re, _ := regexp.Compile(`\d+$`)
+    values := re.FindStringSubmatch(r.RequestURI)
+
     decoder := json.NewDecoder(r.Body)
+    var route models.Route
+    err := decoder.Decode(&route)
+    if err != nil {
+        panic(err)
+    }
 
-	var route models.Route
-	err = decoder.Decode(&route)
-
-	if err != nil {
-		panic(err)
-	}
-    models.AddRoute(route)
+    if len(values) > 0 {
+        routeID, err := strconv.Atoi(values[0])
+        if err != nil {
+            panic(err)
+        } else {
+            models.UpdateRoute(route)
+            fmt.Fprintf(w, "{uid: \"%d\"}", routeID)
+        }
+    } else {
+        uid := models.AddRoute(route)
+        fmt.Fprintf(w, "{uid: \"%d\"}", uid)
+    }
 }
 
 func authHandler(w http.ResponseWriter, r *http.Request) {

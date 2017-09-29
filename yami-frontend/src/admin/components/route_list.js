@@ -58,10 +58,25 @@ const RouteList = (props) => {
                                         </Link>
                                     </span>
                                 </div>
-                                
                             </li>
                         )
                     })}
+                    <div
+                        style={{
+                            marginTop: "20px",
+                        }}
+                    >
+                        <Link 
+                            style={{
+                                textDecoration: "none",
+                                color: "#0064a8",
+                                borderBottom: "1px solid #0064a8",
+                            }}
+                            to="admin/route/">
+                            Новый маршрут
+                        </Link>
+                    </div>
+
                 </ul>
             </div>
         </div>

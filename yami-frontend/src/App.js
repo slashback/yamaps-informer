@@ -41,6 +41,7 @@ class App extends Component {
             <Switch>
               <Route path="/skip/" component={ChartPage} />
               <Route path="/admin/route/:routeId" component={RouteEditPage} />
+              <Route path="/admin/route/" component={RouteEditPage} />
               <Route path="/admin" component={AdminPage} />
               <Route path="/auth" component={LoginPage} />
               <Route path="/" component={ChartPage} />

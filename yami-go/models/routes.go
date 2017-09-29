@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -203,7 +204,7 @@ func AddDuration(dur Duration) {
 }
 
 // UpdateRoute updates route
-func AddRoute(route Route) {
+func UpdateRoute(route Route) {
     stmt, err:= db.Prepare(`
         UPDATE routes
         SET name=$1, waypoints=$2 
@@ -216,4 +217,20 @@ func AddRoute(route Route) {
     if err != nil {
         panic(err)
     }
+}
+
+// AddRoute adds route
+func AddRoute(route Route) int {
+    fmt.Println(route)
+    stmt := `
+        INSERT INTO routes (name, description, waypoints)
+        VALUES ($1, 'desc', $2) 
+        returning uid
+    `
+    id := 0  
+    err := db.QueryRow(stmt, route.Name, route.Waypoints).Scan(&id)  
+    if err != nil {  
+        panic(err)
+    }
+    return id
 }

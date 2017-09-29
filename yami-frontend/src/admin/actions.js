@@ -85,9 +85,14 @@ export const apiGetCharts = () => {
 
 export const apiSaveRoute = (route) => {
     return function(dispatch, getState) {
-        console.log('API CALL', prepareSaveRoute(route))
-        const url = `/api/route/${route.uid}`
-        apiPost(url, prepareSaveRoute(route)).then(function (response) {
+        const routeId = route.uid || ""
+        const url = `/api/route/${routeId}`
+        const prepared = prepareSaveRoute(route)
+        const routeData = {
+            ...prepareSaveRoute(route),
+            uid: prepared.uid || null,
+        }
+        apiPost(url, routeData).then(function (response) {
             // TODO: ok or err
             dispatch(editRoute(route))
             history.push('/admin')
