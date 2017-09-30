@@ -25,6 +25,15 @@ export const receiveCharts = (charts) => {
     }
 }
 
+export const EDIT_CHART_NAME = "EDIT_CHART_NAME"
+export const editChartName = (chartId, name) {
+    return {
+        type: EDIT_CHART_NAME,
+        chartId,
+        name,
+    }
+}
+
 const apiGet = (url) => {
     return fetch(url).then(function(response) {
         return response.json()

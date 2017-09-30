@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import ChartListItem from './chart_list_item'
 
 const ChartList = (props) => {
@@ -27,6 +28,17 @@ const ChartList = (props) => {
                         )
                     })}
                 </ul>
+                <div>
+                    <Link 
+                        style={{
+                            textDecoration: "none",
+                            color: "#0064a8",
+                            borderBottom: "1px solid #0064a8",
+                        }}
+                        to="admin/chart/">
+                        Новый график
+                    </Link>
+                </div>
             </div>
         </div>
     )
