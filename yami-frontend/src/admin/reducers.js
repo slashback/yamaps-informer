@@ -1,4 +1,11 @@
-import { RECEIVE_ROUTES, RECEIVE_CHARTS, RECEIVE_ROUTE } from './actions'
+import { 
+  RECEIVE_ROUTES, 
+  RECEIVE_CHARTS, 
+  RECEIVE_ROUTE,
+  EDIT_CHART_NAME,
+  EDIT_CHART_DESCRIPTION,
+  EDIT_CHART_ROUTES, 
+} from './actions'
 import { combineReducers } from 'redux'
 
 function routes(state = [], action) {
@@ -29,6 +36,11 @@ function charts(state = [], action) {
       return [
         ...action.payload,
       ]
+    case EDIT_CHART_NAME:
+      console.log(state)
+      console.log(state.filter(item => item.uid !== action.chartId))
+      console.log(state.find(item => item.uid === action.chartId)[0])
+      return state
     default:
       return state
   }

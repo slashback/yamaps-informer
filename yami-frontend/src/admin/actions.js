@@ -26,11 +26,29 @@ export const receiveCharts = (charts) => {
 }
 
 export const EDIT_CHART_NAME = "EDIT_CHART_NAME"
-export const editChartName = (chartId, name) {
+export const editChartName = (chartId, name) => {
     return {
         type: EDIT_CHART_NAME,
         chartId,
         name,
+    }
+}
+
+export const EDIT_CHART_DESCRIPTION = "EDIT_CHART_DESCRIPTION"
+export const editChartDescription = (chartId, description) => {
+    return {
+        type: EDIT_CHART_DESCRIPTION,
+        chartId,
+        description,
+    }
+}
+
+export const EDIT_CHART_ROUTES = "EDIT_CHART_ROUTES"
+export const editChartRoutes = (chartId, routes) => {
+    return {
+        type: EDIT_CHART_ROUTES,
+        chartId,
+        routes,
     }
 }
 
