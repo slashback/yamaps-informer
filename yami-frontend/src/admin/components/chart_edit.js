@@ -18,7 +18,6 @@ class ChartEdit extends React.Component {
     }
 
     componentWillReceiveProps (nextProps) {
-        console.log('PROPS EDIT', nextProps)
         const chart = nextProps.chart
         this.setState({
             uid: chart.uid,
@@ -40,12 +39,9 @@ class ChartEdit extends React.Component {
     }
 
     handleChange(event) {
-        console.log(event.target.checked)
-        console.log(event.target.value)
         const checked = event.target.checked
         const routeId = parseInt(event.target.value, 10)
         if (checked === true) {
-            console.log('CHECKED')
             this.setState({
                 routes: [
                     ...this.state.routes,
@@ -72,7 +68,6 @@ class ChartEdit extends React.Component {
     }
 
     render() {
-        console.log('ALL OUTE', this.state.allRoutes)
         return (
         <div
             style={{

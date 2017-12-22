@@ -25,12 +25,11 @@ export const receiveCharts = (charts) => {
     }
 }
 
-export const EDIT_CHART_NAME = "EDIT_CHART_NAME"
-export const editChartName = (chartId, name) => {
+export const RECEIVE_CHART = "RECEIVE_CHART"
+export const receiveChart = (chart) => {
     return {
-        type: EDIT_CHART_NAME,
-        chartId,
-        name,
+        type: RECEIVE_CHART,
+        chart,
     }
 }
 
@@ -67,6 +66,10 @@ const apiPost = (url, data) => {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(data)
+    }).then(function(response) {
+        return response.json()
+    }).then(function(json) {
+        return json
     })
 }
 
@@ -124,5 +127,25 @@ export const apiSaveRoute = (route) => {
             dispatch(editRoute(route))
             history.push('/admin')
         })   
+    }
+} 
+
+export const apiSaveChart = (chart) => {
+    return function(dispatch, getState) {
+        const url = `/api/update-chart/`
+        const chartData = {
+            name: chart.name,
+            description: chart.description,
+            routes: chart.routes,
+        }
+        if (chart.uid !== "") {
+            chartData["uid"] = chart.uid
+        }
+        apiPost(url, chartData).then(function (response) {
+            // TODO: ok or err
+            chart.uid = response.uid
+            dispatch(receiveChart(chart))
+            history.push('/admin')
+        })
     }
 }

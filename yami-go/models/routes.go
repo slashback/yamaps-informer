@@ -21,6 +21,14 @@ type Chart struct {
     Routes string       `json:"routes"`
 }
 
+// ChartData chart data from api
+type ChartData struct {
+    Uid int             `json:"uid"`
+    Name string         `json:"name"`
+    Description string  `json:"description"`
+    Routes []int        `json:"routes"`
+}
+
 // Duration represents duration item in db
 type Duration struct {
 	DurationID int
@@ -221,7 +229,6 @@ func UpdateRoute(route Route) {
 
 // AddRoute adds route
 func AddRoute(route Route) int {
-    fmt.Println(route)
     stmt := `
         INSERT INTO routes (name, description, waypoints)
         VALUES ($1, 'desc', $2) 
@@ -233,4 +240,78 @@ func AddRoute(route Route) int {
         panic(err)
     }
     return id
+}
+
+func addChartRoute(chartId int, routeId int) {
+    stmt := `
+        INSERT INTO chart_routes (chart_id, route_id)
+        VALUES ($1, $2)
+    `
+    _, err := db.Query(stmt, chartId, routeId)
+    if err != nil {
+        panic(err)
+    }
+}
+
+func removeChart(chartId int) {
+    stmt := `
+        DELETE from charts
+        WHERE uid=$1
+    `
+    _, err := db.Query(stmt, chartId)
+    if err != nil {
+        panic(err)
+    }
+}
+
+func RemoveChart(chartId int) {
+    removeChartRoutes(chartId)
+    removeChart(chartId)
+}
+
+func removeChartRoutes(chartId int) {
+    stmt := `
+        DELETE from chart_routes
+        WHERE chart_id=$1
+    `
+    _, err := db.Query(stmt, chartId)
+    if err != nil {
+        panic(err)
+    }
+}
+
+// AddChart adds chart
+func AddChart(chart ChartData) int {
+    stmt := `
+        INSERT INTO charts (name)
+        VALUES ($1) 
+        returning uid
+    `
+    chartId := 0  
+    err := db.QueryRow(stmt, chart.Name).Scan(&chartId)  
+    if err != nil {  
+        panic(err)
+    }
+    for _, routeId := range chart.Routes {
+        addChartRoute(chartId, routeId)
+    }
+    return chartId
+}
+
+// UpdateChart updates chart
+func UpdateChart(chart ChartData) int {
+    stmt := `
+        UPDATE charts
+        SET name = $1 
+        WHERE uid = $2
+    `  
+    _, err := db.Query(stmt, chart.Name, chart.Uid)  
+    if err != nil {  
+        panic(err)
+    }
+    removeChartRoutes(chart.Uid)
+    for _, routeId := range chart.Routes {
+        addChartRoute(chart.Uid, routeId)
+    }
+    return chart.Uid
 }

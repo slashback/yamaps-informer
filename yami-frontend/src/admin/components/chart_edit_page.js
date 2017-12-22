@@ -2,7 +2,7 @@ import React from 'react'
 import { connect } from 'react-redux'
 import NeedAuth from '../../auth/components/need_auth'
 import ChartEdit from './chart_edit'
-import { apiGetRoutes, apiGetCharts } from '../actions'
+import { apiGetRoutes, apiGetCharts, apiSaveChart } from '../actions'
 
 
 class ChartEditPage extends React.Component {
@@ -14,16 +14,27 @@ class ChartEditPage extends React.Component {
     componentWillMount() {
         this.props.initRoutes()
         this.props.initCharts()
+        const chart = this.props.location.chart
+        if (chart === undefined) {
+            // api call
+        } else {
+            this.setState({
+                uid: chart.uid,
+                name: chart.name,
+                description: chart.description,
+                routes: chart.routes,
+            })
+        }
     }
 
     onSaveChart(chart) {
-        console.log(chart)
+        this.props.saveChart(chart)
     }
 
     render() {
         const charts = this.props.charts
         const routes = this.props.routes
-        const currChartId = this.props.match.params.chartId
+        const currChartId = parseInt(this.props.match.params.chartId, 10)
         let currentChart = charts.find(item => item.uid === currChartId)
         if (currentChart === undefined) {
             currentChart = {
@@ -60,6 +71,10 @@ const mapDispatchToProps = (dispatch) => {
     initCharts: () => {
       dispatch(apiGetCharts())
     },
+    saveChart: (chart) => {
+      dispatch(apiSaveChart(chart))
+    },
+
   }
 }
 

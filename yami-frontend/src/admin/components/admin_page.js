@@ -25,8 +25,6 @@ class AdminPage extends React.Component {
     render() {
         const charts = prepareChartData(this.props.charts, this.props.routes)
         const routes = this.props.routes
-        console.log("PREPARE CH", charts)
-        console.log('PREPARE ROU', routes)
     return (
         <NeedAuth>
             <div

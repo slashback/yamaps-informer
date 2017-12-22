@@ -30,6 +30,14 @@ type AuthData struct {
     Password string    `json:"password"`
 }
 
+type responseUid struct {
+    Uid int `json:"uid"`
+}
+
+type requestUid struct {
+    Uid int `json:"uid"`
+}
+
 func getBeginningOfTheDay(timestamp time.Time) time.Time {
     year, month, day := timestamp.Date()
     return time.Date(year, month, day, 0, 0, 0, 0, timestamp.Location())
@@ -113,6 +121,42 @@ func routeListHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, string(routesJSON))
 }
 
+func removeChartHandler(w http.ResponseWriter, r *http.Request) {
+    decoder := json.NewDecoder(r.Body)
+    var data requestUid
+    err := decoder.Decode(&data)
+    if err != nil {
+        panic(err)
+    }
+    models.RemoveChart(data.Uid)
+}
+
+func updateChartHandler(w http.ResponseWriter, r *http.Request) {
+    decoder := json.NewDecoder(r.Body)
+
+	var data models.ChartData
+	err := decoder.Decode(&data)
+    if err != nil {
+		panic(err)
+	}
+    var uid int
+	fmt.Println(data)
+    if data.Uid != 0 {
+        fmt.Println("UPDATE")
+        uid = models.UpdateChart(data)
+    } else {
+        uid = models.AddChart(data)
+    }
+    resp := responseUid{uid}
+    js, err := json.Marshal(resp)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    w.Header().Set("Content-Type", "application/json")
+    w.Write(js)
+}
+
 func routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
     re, _ := regexp.Compile(`\d+$`)
     values := re.FindStringSubmatch(r.RequestURI)
@@ -134,7 +178,14 @@ func routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
         }
     } else {
         uid := models.AddRoute(route)
-        fmt.Fprintf(w, "{uid: \"%d\"}", uid)
+        resp := responseUid{uid}
+        js, err := json.Marshal(resp)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        w.Header().Set("Content-Type", "application/json")
+        w.Write(js)
     }
 }
 
@@ -170,6 +221,8 @@ func main() {
     // fmt.Printf("took %s\n", elapsed)
     http.HandleFunc("/api/formatted_charts/", chartsHandler)
     http.HandleFunc("/api/charts/", chartListHandler)
+    http.HandleFunc("/api/update-chart/", updateChartHandler)
+    http.HandleFunc("/api/remove-chart/", removeChartHandler)
     http.HandleFunc("/api/routes/", routeListHandler)
     http.HandleFunc("/api/route/", routeUpdateHandler)
     http.HandleFunc("/api/auth/", authHandler)
