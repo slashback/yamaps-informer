@@ -128,25 +128,13 @@ func removeChartHandler(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         panic(err)
     }
-    models.RemoveChart(data.Uid)
+    err = models.RemoveChart(data.Uid)
+    if err != nil {
+        panic(err)
+    }
 }
 
-func updateChartHandler(w http.ResponseWriter, r *http.Request) {
-    decoder := json.NewDecoder(r.Body)
-
-	var data models.ChartData
-	err := decoder.Decode(&data)
-    if err != nil {
-		panic(err)
-	}
-    var uid int
-	fmt.Println(data)
-    if data.Uid != 0 {
-        fmt.Println("UPDATE")
-        uid = models.UpdateChart(data)
-    } else {
-        uid = models.AddChart(data)
-    }
+func responseID(w http.ResponseWriter, uid int) {
     resp := responseUid{uid}
     js, err := json.Marshal(resp)
     if err != nil {
@@ -157,36 +145,55 @@ func updateChartHandler(w http.ResponseWriter, r *http.Request) {
     w.Write(js)
 }
 
-func routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
-    re, _ := regexp.Compile(`\d+$`)
-    values := re.FindStringSubmatch(r.RequestURI)
-
+func getChartFromRequest(r *http.Request) (models.ChartData, error) {
     decoder := json.NewDecoder(r.Body)
-    var route models.Route
-    err := decoder.Decode(&route)
+	var chartData models.ChartData
+	err := decoder.Decode(&chartData)
+    if err != nil {
+		return models.ChartData{}, err
+	}
+    return chartData, nil
+}
+
+func chartUpdateHandler(w http.ResponseWriter, r *http.Request) {
+    chartData, err := getChartFromRequest(r)
+    var uid int
+    if chartData.Uid != 0 {
+        uid, err = models.UpdateChart(chartData)
+    } else {
+        uid, err = models.AddChart(chartData)
+    }
     if err != nil {
         panic(err)
     }
+    responseID(w, uid)
+}
 
-    if len(values) > 0 {
-        routeID, err := strconv.Atoi(values[0])
-        if err != nil {
-            panic(err)
-        } else {
-            models.UpdateRoute(route)
-            fmt.Fprintf(w, "{uid: \"%d\"}", routeID)
-        }
-    } else {
-        uid := models.AddRoute(route)
-        resp := responseUid{uid}
-        js, err := json.Marshal(resp)
-        if err != nil {
-            http.Error(w, err.Error(), http.StatusInternalServerError)
-            return
-        }
-        w.Header().Set("Content-Type", "application/json")
-        w.Write(js)
+func getRouteFromRequest(r *http.Request) (models.Route, error) {
+    decoder := json.NewDecoder(r.Body)
+	var routeData models.Route
+	err := decoder.Decode(&routeData)
+    if err != nil {
+		return models.Route{}, err
+	}
+    return routeData, nil
+}
+
+func routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
+    route, err := getRouteFromRequest(r)
+    if err != nil {
+        panic(err)
     }
+    var uid int
+    if route.RouteID != 0 {
+        uid, err = models.UpdateRoute(route)
+    } else {
+        uid, err = models.AddRoute(route)
+    }
+    if err != nil {
+        panic(err)
+    }
+    responseID(w, uid)
 }
 
 func authHandler(w http.ResponseWriter, r *http.Request) {
@@ -221,7 +228,7 @@ func main() {
     // fmt.Printf("took %s\n", elapsed)
     http.HandleFunc("/api/formatted_charts/", chartsHandler)
     http.HandleFunc("/api/charts/", chartListHandler)
-    http.HandleFunc("/api/update-chart/", updateChartHandler)
+    http.HandleFunc("/api/update-chart/", chartUpdateHandler)
     http.HandleFunc("/api/remove-chart/", removeChartHandler)
     http.HandleFunc("/api/routes/", routeListHandler)
     http.HandleFunc("/api/route/", routeUpdateHandler)

@@ -209,23 +209,24 @@ func AddDuration(dur Duration) {
 }
 
 // UpdateRoute updates route
-func UpdateRoute(route Route) {
+func UpdateRoute(route Route) (int, error) {
     stmt, err:= db.Prepare(`
         UPDATE routes
         SET name=$1, waypoints=$2 
         WHERE uid=$3
     `)
     if err != nil {
-        panic(err)
+        return 0, err
     }
     _, err = stmt.Exec(route.Name, route.Waypoints, route.RouteID)
     if err != nil {
-        panic(err)
+        return 0, err
     }
+    return route.RouteID, nil
 }
 
 // AddRoute adds route
-func AddRoute(route Route) int {
+func AddRoute(route Route) (int, error) {
     stmt := `
         INSERT INTO routes (name, description, waypoints)
         VALUES ($1, 'desc', $2) 
@@ -234,51 +235,61 @@ func AddRoute(route Route) int {
     id := 0  
     err := db.QueryRow(stmt, route.Name, route.Waypoints).Scan(&id)  
     if err != nil {  
-        panic(err)
+        return 0, err
     }
-    return id
+    return id, nil
 }
 
-func addChartRoute(chartId int, routeId int) {
+func addChartRoute(chartId int, routeId int) error {
     stmt := `
         INSERT INTO chart_routes (chart_id, route_id)
         VALUES ($1, $2)
     `
     _, err := db.Query(stmt, chartId, routeId)
     if err != nil {
-        panic(err)
+        return err
     }
+    return nil
 }
 
-func removeChart(chartId int) {
+func removeChart(chartId int) error {
     stmt := `
         DELETE from charts
         WHERE uid=$1
     `
     _, err := db.Query(stmt, chartId)
     if err != nil {
-        panic(err)
+        return err
     }
+    return nil
 }
 
-func RemoveChart(chartId int) {
-    removeChartRoutes(chartId)
-    removeChart(chartId)
+func RemoveChart(chartId int) error {
+    err := removeChartRoutes(chartId)
+    if err != nil {
+        return err
+    }
+    err = removeChart(chartId)
+    if err != nil {
+        return err
+    }
+    return nil
 }
 
-func removeChartRoutes(chartId int) {
+func removeChartRoutes(chartId int) error {
     stmt := `
         DELETE from chart_routes
         WHERE chart_id=$1
     `
     _, err := db.Query(stmt, chartId)
     if err != nil {
-        panic(err)
+        return err
     }
+    return nil
 }
 
 // AddChart adds chart
-func AddChart(chart ChartData) int {
+func AddChart(chart ChartData) (int, error) {
     stmt := `
         INSERT INTO charts (name)
         VALUES ($1) 
@@ -287,16 +298,16 @@ func AddChart(chart ChartData) int {
     chartId := 0  
     err := db.QueryRow(stmt, chart.Name).Scan(&chartId)  
     if err != nil {  
-        panic(err)
+        return 0, err
     }
     for _, routeId := range chart.Routes {
         addChartRoute(chartId, routeId)
     }
-    return chartId
+    return chartId, nil
 }
 
 // UpdateChart updates chart
-func UpdateChart(chart ChartData) int {
+func UpdateChart(chart ChartData) (int, error) {
     stmt := `
         UPDATE charts
         SET name = $1 
@@ -304,11 +315,14 @@ func UpdateChart(chart ChartData) int {
     `  
     _, err := db.Query(stmt, chart.Name, chart.Uid)  
     if err != nil {  
-        panic(err)
+        return 0, err
     }
-    removeChartRoutes(chart.Uid)
+    err = removeChartRoutes(chart.Uid)
+    if err != nil {
+        return 0, err
+    }
     for _, routeId := range chart.Routes {
         addChartRoute(chart.Uid, routeId)
     }
-    return chart.Uid
+    return chart.Uid, nil
 }
