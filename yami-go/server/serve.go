@@ -156,12 +156,14 @@ func getChartFromRequest(r *http.Request) (models.ChartData, error) {
 }
 
 func chartUpdateHandler(w http.ResponseWriter, r *http.Request) {
-    chartData, err := getChartFromRequest(r)
+    chart, err := getChartFromRequest(r)
     var uid int
-    if chartData.Uid != 0 {
-        uid, err = models.UpdateChart(chartData)
+    if chart.Uid != 0 {
+        fmt.Printf("Updating chartID: %d, name: %s \n", chart.Uid, chart.Name)
+        uid, err = models.UpdateChart(chart)
     } else {
-        uid, err = models.AddChart(chartData)
+        fmt.Printf("Creating new chart: %s \n", chart.Name)
+        uid, err = models.AddChart(chart)
     }
     if err != nil {
         panic(err)
@@ -186,8 +188,10 @@ func routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
     }
     var uid int
     if route.RouteID != 0 {
+        fmt.Printf("Updating routeID: %d, name: %s \n", route.RouteID, route.Name)
         uid, err = models.UpdateRoute(route)
     } else {
+        fmt.Printf("Creating new route: %s \n", route.Name)
         uid, err = models.AddRoute(route)
     }
     if err != nil {
