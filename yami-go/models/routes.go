@@ -1,9 +1,6 @@
 package models
 
-import (
-	"fmt"
-	"time"
-)
+import "time"
 
 // Route route
 type Route struct {
