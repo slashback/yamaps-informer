@@ -264,6 +264,60 @@ func removeChart(chartId int) error {
     return nil
 }
 
+
+
+func removeRoute(routeId int) error {
+    stmt := `
+        DELETE from routes
+        WHERE uid=$1
+    `
+    _, err := db.Query(stmt, routeId)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+func removeRouteFromCharts(routeId int) error {
+    stmt := `
+        DELETE from chart_routes
+        WHERE route_id=$1
+    `
+    _, err := db.Query(stmt, routeId)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+func removeRouteDurations(routeId int) error {
+    stmt := `
+        DELETE from durations
+        WHERE route_id=$1
+    `
+    _, err := db.Query(stmt, routeId)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+func RemoveRoute(routeId int) error {
+    err := removeRouteDurations(routeId)
+    if err != nil {
+        return err
+    }
+    err = removeRouteFromCharts(routeId)
+    if err != nil {
+        return err
+    }
+    err = removeRoute(routeId)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
 func RemoveChart(chartId int) error {
     err := removeChartRoutes(chartId)
     if err != nil {

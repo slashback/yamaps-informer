@@ -132,7 +132,21 @@ func removeChartHandler(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         panic(err)
     }
+    responseID(w, data.Uid)
 }
+
+func removeRouteHandler(w http.ResponseWriter, r *http.Request) {
+    route, err := getRouteFromRequest(r)
+    if err != nil {
+        panic(err)
+    }
+    err = models.RemoveRoute(route.RouteID)
+    if err != nil {
+        panic(err)
+    }
+    responseID(w, route.RouteID)
+}
+
 
 func responseID(w http.ResponseWriter, uid int) {
     resp := responseUid{uid}
@@ -234,6 +248,7 @@ func main() {
     http.HandleFunc("/api/charts/", chartListHandler)
     http.HandleFunc("/api/update-chart/", chartUpdateHandler)
     http.HandleFunc("/api/remove-chart/", removeChartHandler)
+    http.HandleFunc("/api/remove-route/", removeRouteHandler)
     http.HandleFunc("/api/routes/", routeListHandler)
     http.HandleFunc("/api/route/", routeUpdateHandler)
     http.HandleFunc("/api/auth/", authHandler)

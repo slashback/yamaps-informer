@@ -2,13 +2,19 @@ import React from 'react'
 import { connect } from 'react-redux'
 import NeedAuth from '../../auth/components/need_auth'
 import ChartEdit from './chart_edit'
-import { apiGetRoutes, apiGetCharts, apiSaveChart } from '../actions'
+import RemoveChart from './chart_remove'
+import { apiGetRoutes, apiGetCharts, apiSaveChart, apiRemoveChart } from '../actions'
 
 
 class ChartEditPage extends React.Component {
     constructor(props) {
         super(props)
         this.onSaveChart = this.onSaveChart.bind(this)
+        this.onRemoveChart = this.onRemoveChart.bind(this)
+    }
+
+    onRemoveChart(chartId) {
+        this.props.removeChart(chartId)
     }
 
     componentWillMount() {
@@ -46,6 +52,10 @@ class ChartEditPage extends React.Component {
         }
         return (
             <NeedAuth>
+                <RemoveChart 
+                    chartId={this.state.uid}
+                    onRemoveChart={this.onRemoveChart}
+                />
                 <ChartEdit 
                     chart={currentChart}
                     allRoutes={routes}
@@ -74,6 +84,9 @@ const mapDispatchToProps = (dispatch) => {
     saveChart: (chart) => {
       dispatch(apiSaveChart(chart))
     },
+    removeChart: (chartId) => {
+        dispatch(apiRemoveChart(chartId))
+    }
 
   }
 }

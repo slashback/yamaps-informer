@@ -1,7 +1,8 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { apiSaveRoute } from '../actions'
+import { apiSaveRoute, apiRemoveRoute } from '../actions'
 import NeedAuth from '../../auth/components/need_auth'
+import RemoveRoute from './route_remove'
 
 const isArraysEqual = (a, b) => {
     if (a === b) return true;
@@ -20,6 +21,8 @@ class RouteEditPage extends React.Component {
         this.onChangeName = this.onChangeName.bind(this)
         this.onChangeDescription = this.onChangeDescription.bind(this)
         this.onSave = this.onSave.bind(this)
+        this.onRemoveRoute = this.onRemoveRoute.bind(this)
+        this.getRouteId = this.getRouteId.bind(this)
         this.state = {
             name: "",
             description: "",
@@ -53,6 +56,14 @@ class RouteEditPage extends React.Component {
         this.setState({
             description: value
         })
+    }
+
+    onRemoveRoute(routeId) {
+        this.props.onRemoveRoute(routeId)
+    }
+
+    getRouteId() {
+        return parseInt(this.props.match.params.routeId, 10)
     }
 
     onSave() {
@@ -109,6 +120,10 @@ class RouteEditPage extends React.Component {
         return (
             <NeedAuth>
                 <div>
+                    <RemoveRoute 
+                        routeId={this.getRouteId()} 
+                        onRemoveRoute={this.onRemoveRoute} 
+                    />
                     <div
                         id="control-form"
                         style={{
@@ -198,6 +213,9 @@ const mapDispatchToProps = (dispatch) => {
     onSaveRoute: (route) => {
       dispatch(apiSaveRoute(route))
     },
+    onRemoveRoute: (routeId) => {
+        dispatch(apiRemoveRoute(routeId))
+    }
   }
 }
 

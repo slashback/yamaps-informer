@@ -33,6 +33,22 @@ export const receiveChart = (chart) => {
     }
 }
 
+export const REMOVE_CHART = "REMOVE_CHART"
+export const removeChart = (chartId) => {
+    return {
+        type: REMOVE_CHART,
+        chartId,
+    }
+}
+
+export const REMOVE_ROUTE = "REMOVE_ROUTE"
+export const removeRoute = (routeId) => {
+    return {
+        type: REMOVE_ROUTE,
+        routeId,
+    }
+}
+
 export const EDIT_CHART_DESCRIPTION = "EDIT_CHART_DESCRIPTION"
 export const editChartDescription = (chartId, description) => {
     return {
@@ -145,6 +161,36 @@ export const apiSaveChart = (chart) => {
             // TODO: ok or err
             chart.uid = response.uid
             dispatch(receiveChart(chart))
+            history.push('/admin')
+        })
+    }
+}
+
+export const apiRemoveChart = (chartId) => {
+    return function(dispatch, getState) {
+        const url = `/api/remove-chart/`
+        const chartData = {
+            uid: chartId,
+        }
+        apiPost(url, chartData).then(function (response) {
+            // TODO: ok or err
+            chartId = response.uid
+            dispatch(removeChart(chartId))
+            history.push('/admin')
+        })
+    }
+}
+
+export const apiRemoveRoute = (routeId) => {
+    return function(dispatch, getState) {
+        const url = `/api/remove-route/`
+        const routeData = {
+            uid: routeId,
+        }
+        apiPost(url, routeData).then(function (response) {
+            // TODO: ok or err
+            routeId = response.uid
+            dispatch(removeRoute(routeId))
             history.push('/admin')
         })
     }
