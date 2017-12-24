@@ -4,3 +4,5 @@ node_modules/
 .idea/
 yami-go/parse
 yami-go/serve
+.parse
+.serve
