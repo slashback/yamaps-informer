@@ -4,7 +4,6 @@ import (
 	"os"
 	"os/exec"
 	"fmt"
-        "log"
 	"bytes"
 	"encoding/json"
 	"strconv"
