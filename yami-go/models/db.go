@@ -9,8 +9,14 @@ import (
 
 // DataStore db models interface
 type DataStore interface {
+    AddChart(chart ChartData) (int, error)
+    AddRoute(route Route) (int, error)
     GetRoutes() ([]*Route, error)
     GetCharts() ([]*Chart, error)
+    UpdateChart(chart ChartData) (int, error)
+    UpdateRoute(route Route) (int, error)
+    RemoveRoute(routeID int) error
+    RemoveChart(chartID int) error
 }
 
 // DB model structure
@@ -34,4 +40,5 @@ func InitDB() (*DB, error) {
     return &DB{db}, nil
 }
 
+// Deprecated
 var db *sql.DB

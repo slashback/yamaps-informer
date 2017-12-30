@@ -11,6 +11,7 @@ import (
 	"../models"
 )
 
+// Env datastore model
 type Env struct {
 	db models.DataStore
 }
@@ -30,16 +31,13 @@ type chartList struct {
 	ChartList []chart `json:"chart_list"`
 }
 
+// AuthData stores admin password
 type AuthData struct {
 	Password string `json:"password"`
 }
 
-type responseUid struct {
-	Uid int `json:"uid"`
-}
-
-type requestUid struct {
-	Uid int `json:"uid"`
+type responseUID struct {
+	UID int `json:"uid"`
 }
 
 func getBeginningOfTheDay(timestamp time.Time) time.Time {
@@ -117,11 +115,11 @@ func (env *Env) getChartsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *Env) chartListHandler(w http.ResponseWriter, r *http.Request) {
-    charts, err := env.db.GetCharts()
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+	charts, err := env.db.GetCharts()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-    }
+	}
 	chartJSON, err := json.Marshal(charts)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -145,26 +143,26 @@ func (env *Env) getRoutesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(routesJSON)
 }
 
-func removeChartHandler(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	var data requestUid
-	err := decoder.Decode(&data)
+func (env *Env) removeChartHandler(w http.ResponseWriter, r *http.Request) {
+    chart, err := getChartFromRequest(r)
+    if err != nil {
+		http.Error(w, "ValidationError", http.StatusInternalServerError)
+		return
+    }
+	err = env.db.RemoveChart(chart.UID)
 	if err != nil {
 		panic(err)
 	}
-	err = models.RemoveChart(data.Uid)
-	if err != nil {
-		panic(err)
-	}
-	responseID(w, data.Uid)
+	responseID(w, chart.UID)
 }
 
-func removeRouteHandler(w http.ResponseWriter, r *http.Request) {
+func (env *Env) removeRouteHandler(w http.ResponseWriter, r *http.Request) {
 	route, err := getRouteFromRequest(r)
 	if err != nil {
-		panic(err)
-	}
-	err = models.RemoveRoute(route.RouteID)
+		http.Error(w, "ValidationError", http.StatusInternalServerError)
+		return
+    }
+	err = env.db.RemoveRoute(route.RouteID)
 	if err != nil {
 		panic(err)
 	}
@@ -172,7 +170,7 @@ func removeRouteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func responseID(w http.ResponseWriter, uid int) {
-	resp := responseUid{uid}
+	resp := responseUID{uid}
 	js, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -192,15 +190,15 @@ func getChartFromRequest(r *http.Request) (models.ChartData, error) {
 	return chartData, nil
 }
 
-func chartUpdateHandler(w http.ResponseWriter, r *http.Request) {
+func (env *Env) chartUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	chart, err := getChartFromRequest(r)
 	var uid int
-	if chart.Uid != 0 {
-		fmt.Printf("Updating chartID: %d, name: %s \n", chart.Uid, chart.Name)
-		uid, err = models.UpdateChart(chart)
+	if chart.UID != 0 {
+		fmt.Printf("Updating chartID: %d, name: %s \n", chart.UID, chart.Name)
+		uid, err = env.db.UpdateChart(chart)
 	} else {
 		fmt.Printf("Creating new chart: %s \n", chart.Name)
-		uid, err = models.AddChart(chart)
+		uid, err = env.db.AddChart(chart)
 	}
 	if err != nil {
 		panic(err)
@@ -218,7 +216,7 @@ func getRouteFromRequest(r *http.Request) (models.Route, error) {
 	return routeData, nil
 }
 
-func routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
+func (env *Env) routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	route, err := getRouteFromRequest(r)
 	if err != nil {
 		panic(err)
@@ -226,10 +224,10 @@ func routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	var uid int
 	if route.RouteID != 0 {
 		fmt.Printf("Updating routeID: %d, name: %s \n", route.RouteID, route.Name)
-		uid, err = models.UpdateRoute(route)
+		uid, err = env.db.UpdateRoute(route)
 	} else {
 		fmt.Printf("Creating new route: %s \n", route.Name)
-		uid, err = models.AddRoute(route)
+		uid, err = env.db.AddRoute(route)
 	}
 	if err != nil {
 		panic(err)
@@ -253,9 +251,6 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// start := time.Now()
-	// elapsed := time.Since(start)
-	// fmt.Printf("took %s\n", elapsed)
 	db, err := models.InitDB()
 	if err != nil {
 		panic(err)
@@ -263,12 +258,12 @@ func main() {
 	env := &Env{db}
 
 	http.HandleFunc("/api/formatted_charts/", env.getChartsHandler)
-	http.HandleFunc("/api/charts/", env.chartListHandler)
-	http.HandleFunc("/api/update-chart/", chartUpdateHandler)
-	http.HandleFunc("/api/remove-chart/", removeChartHandler)
-	http.HandleFunc("/api/remove-route/", removeRouteHandler)
-	http.HandleFunc("/api/routes/", env.getRoutesHandler)
-	http.HandleFunc("/api/route/", routeUpdateHandler)
+	http.HandleFunc("/api/get-charts/", env.chartListHandler)
+	http.HandleFunc("/api/get-routes/", env.getRoutesHandler)
+	http.HandleFunc("/api/update-chart/", env.chartUpdateHandler)
+	http.HandleFunc("/api/update-route/", env.routeUpdateHandler)
+	http.HandleFunc("/api/remove-chart/", env.removeChartHandler)
+	http.HandleFunc("/api/remove-route/", env.removeRouteHandler)
 	http.HandleFunc("/api/auth/", authHandler)
 	http.ListenAndServe(":8080", nil)
 }
