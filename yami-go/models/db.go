@@ -3,8 +3,9 @@ package models
 import (
     "fmt"
     "os"
+    "time"
 	"database/sql"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // db driver
 )
 
 // DataStore db models interface
@@ -17,6 +18,9 @@ type DataStore interface {
     UpdateRoute(route Route) (int, error)
     RemoveRoute(routeID int) error
     RemoveChart(chartID int) error
+    GetUniqueDurationTimestamps(from time.Time, till time.Time) []string
+    GetDurationsByDate(from time.Time, till time.Time) map[int]map[string]int
+    GetRoutesByCharts() map[int][]int
 }
 
 // DB model structure

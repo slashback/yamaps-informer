@@ -108,7 +108,7 @@ func addDuration(storage map[int]map[string]int, routeID int, checkTime string, 
 }
 
 // GetDurationsByDate returnes durations by date diff
-func GetDurationsByDate(from time.Time, till time.Time) map[int]map[string]int {
+func (db *DB) GetDurationsByDate(from time.Time, till time.Time) map[int]map[string]int {
 	durationsMap := make(map[int]map[string]int)
 	stmt, err := db.Prepare(`
 		SELECT uid, route_id, duration, check_time 
@@ -136,7 +136,7 @@ func GetDurationsByDate(from time.Time, till time.Time) map[int]map[string]int {
 }
 
 // GetUniqueDurationTimestamps represents unique timestamps by dates
-func GetUniqueDurationTimestamps(from time.Time, till time.Time) []string {
+func (db *DB) GetUniqueDurationTimestamps(from time.Time, till time.Time) []string {
 	timestamps := make([]string, 0)
 	stmt, err := db.Prepare(`
         SELECT distinct TO_CHAR(durations.check_time, 'HH24:MI') from durations 
@@ -171,7 +171,7 @@ func buildChartRoutesMap(routes []chartRouteItem) map[int][]int {
 }
 
 // GetRoutesByCharts represents routes by chart ids
-func GetRoutesByCharts() map[int][]int {
+func (db *DB) GetRoutesByCharts() map[int][]int {
 	routes := make([]chartRouteItem, 0)
 
 	chartRoutes, err := db.Query(`

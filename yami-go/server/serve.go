@@ -78,13 +78,13 @@ func remapDurations(rawDurations map[int]map[string]int, timestamps *[]string, r
 }
 
 func (env *Env) getDurationsByDate(from time.Time, till time.Time) chartList {
-	timestamps := models.GetUniqueDurationTimestamps(from, till)
-	durationsMap := models.GetDurationsByDate(from, till)
+	timestamps := env.db.GetUniqueDurationTimestamps(from, till)
+	durationsMap := env.db.GetDurationsByDate(from, till)
 	routes, err := env.db.GetRoutes()
 	if err != nil {
 		panic(err)
 	}
-	routeCharts := models.GetRoutesByCharts()
+	routeCharts := env.db.GetRoutesByCharts()
 
 	return remapDurations(durationsMap, &timestamps, routes, routeCharts)
 }
@@ -97,20 +97,28 @@ func (env *Env) handleGetCharts(daysShift int) chartList {
 	return charts
 }
 
-func (env *Env) getChartsHandler(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
-	w.Header().Set("Content-Type", "application/json")
+func getDaysShiftFromRequest(r *http.Request) int {
 	daysShiftRegex := regexp.MustCompile(`\d+$`)
+	regexResult := daysShiftRegex.FindStringSubmatch(r.RequestURI)
+	if len(regexResult) == 0 {
+		return 0
+	}
 	match := daysShiftRegex.FindStringSubmatch(r.RequestURI)[0]
 	daysShift, err := strconv.Atoi(match)
 	if err != nil {
 		fmt.Println(err)
-		daysShift = 0
 	}
+	return daysShift
+}
+
+func (env *Env) getChartsHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	daysShift := getDaysShiftFromRequest(r)
 	charts := env.handleGetCharts(daysShift)
 	chartJSON, _ := json.Marshal(charts)
 	elapsed := time.Since(start)
 	fmt.Printf("took %s\n", elapsed)
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, string(chartJSON))
 }
 
@@ -257,7 +265,7 @@ func main() {
 	}
 	env := &Env{db}
 
-	http.HandleFunc("/api/formatted_charts/", env.getChartsHandler)
+	http.HandleFunc("/api/build-charts/", env.getChartsHandler)
 	http.HandleFunc("/api/get-charts/", env.chartListHandler)
 	http.HandleFunc("/api/get-routes/", env.getRoutesHandler)
 	http.HandleFunc("/api/update-chart/", env.chartUpdateHandler)
