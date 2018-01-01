@@ -21,6 +21,7 @@ type DataStore interface {
     GetUniqueDurationTimestamps(from time.Time, till time.Time) []string
     GetDurationsByDate(from time.Time, till time.Time) map[int]map[string]int
     GetRoutesByCharts() map[int][]int
+    IsSuperUser(authData AuthData) (bool, error)
 }
 
 // DB model structure

@@ -31,6 +31,19 @@ CREATE TABLE chart_routes
     chart_id integer references charts(uid),
     route_id integer references routes(uid)
 );
+
+CREATE TABLE users
+(
+    login text,
+    password text
+);
+
+CREATE TABLE sessions
+(
+    session text,
+    expired timestamp
+);
+
 /*
 insert into charts (name) values ('Main Chart');
     

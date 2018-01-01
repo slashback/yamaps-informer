@@ -31,6 +31,10 @@ type chartList struct {
 	ChartList []chart `json:"chart_list"`
 }
 
+type sessionToken struct {
+	Token string `json:"token"`
+}
+
 // AuthData stores admin password
 type AuthData struct {
 	Password string `json:"password"`
@@ -243,18 +247,42 @@ func (env *Env) routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	responseID(w, uid)
 }
 
-func authHandler(w http.ResponseWriter, r *http.Request) {
+func getAuthDataFromRequest(r *http.Request) (models.AuthData, error) {
 	decoder := json.NewDecoder(r.Body)
-	var authData AuthData
+	var authData models.AuthData
 	err := decoder.Decode(&authData)
+	if err != nil {
+		return models.AuthData{}, err
+	}
+	return authData, nil
+}
+
+func responseAuthToken(w http.ResponseWriter, token string) {
+	resp := sessionToken{token}
+	js, err := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func (env *Env) getSessionHandler(w http.ResponseWriter, r *http.Request) {
+	authData, err := getAuthDataFromRequest(r)
+	if err != nil {
+		http.Error(w, "ValidationError", http.StatusInternalServerError)
+		return
+	}
+	authentificated, err := env.db.IsSuperUser(authData)
 	if err != nil {
 		panic(err)
 	}
-	if authData.Password == "qwe" {
-		fmt.Fprintf(w, "wabwabwab")
+	if authentificated == true {
+		responseAuthToken(w, "wabwabwab")
 	} else {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Auth failed"))
+		http.Error(w, "AuthentificationError", http.StatusForbidden)
+		return
 	}
 }
 
@@ -272,6 +300,6 @@ func main() {
 	http.HandleFunc("/api/update-route/", env.routeUpdateHandler)
 	http.HandleFunc("/api/remove-chart/", env.removeChartHandler)
 	http.HandleFunc("/api/remove-route/", env.removeRouteHandler)
-	http.HandleFunc("/api/auth/", authHandler)
+	http.HandleFunc("/api/get-session/", env.getSessionHandler)
 	http.ListenAndServe(":8080", nil)
 }

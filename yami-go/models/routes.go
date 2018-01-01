@@ -40,6 +40,12 @@ type chartRouteItem struct {
 	routeID   int
 }
 
+// AuthData auth data
+type AuthData struct {
+	Login string `json:"login"`
+	Password string `json:"password"`
+}
+
 func formatTimeStamp(timestamp time.Time) string {
 	return timestamp.Format("15:04")
 }
@@ -384,4 +390,24 @@ func (db *DB) UpdateChart(chart ChartData) (int, error) {
 		db.addChartRoute(chart.UID, routeID)
 	}
 	return chart.UID, nil
+}
+
+// IsSuperUser is superuser
+func (db *DB) IsSuperUser(authData AuthData) (bool, error) {
+	stmt, err := db.Prepare(`
+		SELECT login, password
+		FROM users
+		WHERE login=$1 and password=$2
+    `)
+	if err != nil {
+		return false, err
+	}
+	users, err := stmt.Query(authData.Login, authData.Password)
+	if err != nil {
+		return false, err
+	}
+	for users.Next() {
+		return true, nil
+	}
+	return false, nil
 }

@@ -38,9 +38,10 @@ const apiPost = (url, data) => {
 
 export const apiAuth = (password) => {
     return function(dispatch, getState) {
-        const url = `/api/auth/`
+        const url = `/api/get-session/`
         const authData = {
-            password
+            login: 'admin',
+            password: password,
         }
         apiPost(url, authData).then(function(response) {
             if (!response.ok) {
@@ -48,12 +49,12 @@ export const apiAuth = (password) => {
             }
             return response;
         }).then(function(response) {
-            return response.text()
+            return response.json()
         }).catch(function(error) {
             console.log(error);
-        }).then(function(text) {
-            if (text !== undefined) {
-                createCookie('token',text,7);
+        }).then(function(json) {
+            if (json.token !== undefined) {
+                createCookie('token',json.token,7);
                 history.push('/admin')
             } else {
                 eraseCookie('token')
