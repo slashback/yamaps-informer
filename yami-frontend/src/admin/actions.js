@@ -113,7 +113,7 @@ const prepareSaveRoute = (route) => {
 
 export const apiGetRoutes = () => {
     return function (dispatch, getState) {
-            apiGet('/api/routes').then(function(rawRoutes) {
+            apiGet('/api/get-routes/').then(function(rawRoutes) {
                 const routes = rawRoutes.map(prepareGetRoute, rawRoutes)
                 dispatch(receiveRoutes(routes))
         })
@@ -122,7 +122,7 @@ export const apiGetRoutes = () => {
 
 export const apiGetCharts = () => {
         return function (dispatch, getState) {
-            apiGet('/api/charts').then(function(rawCharts) {
+            apiGet('/api/get-charts/').then(function(rawCharts) {
                 const charts = rawCharts.map(prepareGetChart, rawCharts)
                 dispatch(receiveCharts(charts))
         })
@@ -132,7 +132,7 @@ export const apiGetCharts = () => {
 export const apiSaveRoute = (route) => {
     return function(dispatch, getState) {
         const routeId = route.uid || ""
-        const url = `/api/route/${routeId}`
+        const url = `/api/update-route/`
         const prepared = prepareSaveRoute(route)
         const routeData = {
             ...prepareSaveRoute(route),
