@@ -57,7 +57,11 @@ func responseError(w http.ResponseWriter, errText string, errCode int) {
 	}
 	w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(errCode)
-    w.Write(js)
+	w.Write(js)
+}
+
+func responseValidationError(w http.ResponseWriter) {
+	responseError(w, "ValidationError", http.StatusBadRequest)
 }
 
 func getBeginningOfTheDay(timestamp time.Time) time.Time {
@@ -174,7 +178,7 @@ func (env *Env) getRoutesHandler(w http.ResponseWriter, r *http.Request) {
 func (env *Env) removeChartHandler(w http.ResponseWriter, r *http.Request) {
     chart, err := getChartFromRequest(r)
     if err != nil {
-		http.Error(w, "ValidationError", http.StatusInternalServerError)
+		responseValidationError(w)
 		return
     }
 	err = env.db.RemoveChart(chart.UID)
@@ -187,7 +191,7 @@ func (env *Env) removeChartHandler(w http.ResponseWriter, r *http.Request) {
 func (env *Env) removeRouteHandler(w http.ResponseWriter, r *http.Request) {
 	route, err := getRouteFromRequest(r)
 	if err != nil {
-		http.Error(w, "ValidationError", http.StatusInternalServerError)
+		responseValidationError(w)
 		return
     }
 	err = env.db.RemoveRoute(route.RouteID)
@@ -286,8 +290,8 @@ func responseAuthToken(w http.ResponseWriter, token string) {
 
 func (env *Env) getSessionHandler(w http.ResponseWriter, r *http.Request) {
 	authData, err := getAuthDataFromRequest(r)
-	if err != nil {
-		http.Error(w, "ValidationError", http.StatusInternalServerError)
+	if err != nil || authData.Login == "" || authData.Password == "" {
+		responseValidationError(w)
 		return
 	}
 	authentificated, err := env.db.IsSuperUser(authData)
